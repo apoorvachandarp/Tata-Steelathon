@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TRACE · Container Carbon Twin</title>
+<style>:root{--bg:#0a1020;--panel:rgba(12,19,35,.78);--panel2:rgba(20,30,52,.85);--line:rgba(148,163,184,.18);--tx:#e5ecf6;--mut:#93a3bb;--acc:#38bdf8;--acc2:#0ea5e9;--good:#22c55e;--warn:#eab308;--bad:#ef4444;--sh:0 10px 40px rgba(0,0,0,.45)}
+body.day{--bg:#dfe7f1;--panel:rgba(255,255,255,.86);--panel2:rgba(241,245,250,.95);--line:rgba(30,41,59,.14);--tx:#0f172a;--mut:#475569;--acc:#0369a1;--acc2:#0284c7;--sh:0 10px 30px rgba(15,23,42,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+canvas#cv{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;outline:none}
+canvas#cv.drag{cursor:grabbing}canvas#cv.hand{cursor:pointer}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.45) 100%)}
+body.day #vig{background:radial-gradient(ellipse at 50% 45%,transparent 60%,rgba(15,23,42,.12) 100%)}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+#top{position:fixed;top:12px;left:14px;right:14px;display:flex;align-items:center;gap:12px;pointer-events:none;z-index:5}
+#top>*{pointer-events:auto}
+#top>.panel{position:relative}
+body.clean #left,body.clean #right,body.clean #bottom{display:none!important}
+.brand{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px}
+.mark{width:30px;height:30px;border-radius:9px;background:conic-gradient(from 210deg,#38bdf8,#22c55e,#facc15,#f472b6,#38bdf8);position:relative;flex:none}
+.mark:after{content:"";position:absolute;inset:6px;border-radius:5px;background:var(--bg)}
+.brand b{font-size:15px;letter-spacing:.14em}.brand span{display:block;font-size:11px;color:var(--mut)}
+#crumb{display:flex;gap:6px;align-items:center;padding:7px 10px;font-size:12px}
+#crumb a{color:var(--mut);cursor:pointer;text-decoration:none;padding:3px 8px;border-radius:7px}#crumb a:hover{background:var(--line);color:var(--tx)}
+#crumb a.cur{color:var(--tx);font-weight:600;background:var(--line)}#crumb i{color:var(--mut);font-style:normal;opacity:.6}
+.sp{flex:1}
+.btns{display:flex;gap:6px;padding:6px}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--tx);border-radius:9px;padding:7px 11px;font:inherit;font-size:12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--acc)}.btn.pri{background:linear-gradient(135deg,#0ea5e9,#2563eb);border-color:transparent;color:#fff;font-weight:600}
+.btn.pri:hover{filter:brightness(1.1)}.btn.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc)}
+#left{top:74px;left:14px;width:318px;max-height:calc(100% - 150px);overflow:auto;padding:14px}
+#right{top:74px;right:14px;width:360px;max-height:calc(100% - 92px);overflow:auto;padding:14px}
+.h{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:2px 0 8px;font-weight:600}
+.h2{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:14px 0 8px;font-weight:600}
+.fcard{display:flex;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;cursor:pointer;background:var(--panel2);transition:.15s}
+.fcard:hover{border-color:var(--acc);transform:translateX(2px)}
+.num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none;color:#fff}
+.fcard b{display:block;font-size:12.5px}.fcard span{display:block;color:var(--mut);font-size:11.5px}
+.fcard em{font-style:normal;font-size:11px;color:var(--acc)}
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;color:var(--mut);font:inherit;font-size:11.5px;padding:6px 6px;border-radius:7px;cursor:pointer}
+.seg button.on{background:var(--acc2);color:#fff}
+.leg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11.5px;color:var(--mut);margin-top:9px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:9px 10px}
+.kpi b{display:block;font-size:19px;letter-spacing:-.01em}.kpi span{font-size:11px;color:var(--mut)}
+.feed{display:flex;flex-direction:column;gap:6px}
+.fe{display:grid;grid-template-columns:44px 1fr;gap:6px;padding:7px 9px;border-radius:9px;background:var(--panel2);border-left:3px solid var(--acc);font-size:11.5px;animation:fin .5s ease}
+.fe .t{color:var(--mut)}.fe b{font-weight:600}
+@keyframes fin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#tip{position:fixed;z-index:20;pointer-events:none;min-width:240px;max-width:330px;padding:12px 13px;display:none}
+#tip .id{font-size:14px;font-weight:700;letter-spacing:.02em}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;color:#fff;margin-right:4px}
+.chip.g{background:transparent;border:1px solid var(--line);color:var(--mut)}
+.lots{margin:8px 0;display:flex;flex-direction:column;gap:4px}
+.lotrow{display:grid;grid-template-columns:12px 1fr auto;gap:7px;align-items:center;font-size:12px}
+.lotrow i{width:10px;height:10px;border-radius:3px;display:block}
+.big{font-size:26px;font-weight:700;letter-spacing:-.02em}.big small{font-size:12px;font-weight:500;color:var(--mut);margin-left:4px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:12px}
+.row span:first-child{color:var(--mut)}.row:last-child{border-bottom:0}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line);margin:6px 0}
+.bar>div{height:100%}
+.hint{color:var(--mut);font-size:11.5px}
+.note{font-size:11.5px;color:var(--mut);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-top:10px}
+.dq{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;color:#0b1220}
+#bottom{left:50%;transform:translateX(-50%);bottom:14px;padding:9px 14px;display:flex;gap:14px;align-items:center;max-width:calc(100% - 720px);min-width:420px}
+#caption{position:fixed;left:50%;bottom:78px;transform:translateX(-50%);z-index:8;max-width:820px;padding:14px 22px;font-size:18px;line-height:1.35;text-align:center;display:none}
+#caption b{color:var(--acc)}#caption .pg{display:block;font-size:11px;color:var(--mut);margin-top:6px;letter-spacing:.08em}
+#fade{position:fixed;inset:0;background:var(--bg);opacity:0;pointer-events:none;z-index:30;transition:opacity .25s}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;will-change:transform}
+.badge{transform-origin:center}.badge b{display:grid;place-items:center;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:#fff;color:#0b1220;font-size:12.5px;box-shadow:0 0 0 3px rgba(56,189,248,.65),0 4px 14px rgba(0,0,0,.5);animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.lotlbl{transform-origin:left}.lotlbl{margin:0}.lotlbl>*{position:relative}
+.lotlbl{padding:0}.lotlbl b,.lotlbl span,.lotlbl i{display:block}
+.lotlbl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px 6px 22px!important;margin-left:-60px;margin-top:-30px;box-shadow:var(--sh)}
+.lotlbl i{position:absolute!important;left:8px;top:9px;width:8px;height:22px;border-radius:3px}
+.lotlbl b{font-size:12px}.lotlbl span{font-size:11px;color:var(--mut)}.lotlbl.on{outline:2px solid var(--acc)}
+.nlbl{text-align:center;transform:translateX(-50%)}.nlbl{margin-top:-34px}
+.nlbl b,.nlbl span{display:block}.nlbl b{font-size:12px;text-shadow:0 1px 3px rgba(0,0,0,.6)}.nlbl span{font-size:10.5px;color:var(--mut)}
+body.day .nlbl b{text-shadow:0 1px 2px rgba(255,255,255,.9)}
+.nlbl{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:4px 9px;margin-left:0}
+.tlbl{border-left:3px solid;background:var(--panel);padding:2px 7px;border-radius:6px;margin:-26px 0 0 -26px;box-shadow:var(--sh)}
+.tlbl b{display:block;font-size:13px}.tlbl span{display:none;font-size:10.5px;color:var(--mut)}.tlbl.on span{display:block}.tlbl.on{outline:2px solid var(--acc)}
+.optc{border:1px solid var(--line);border-radius:11px;padding:9px 10px;margin-bottom:7px;cursor:pointer;background:var(--panel2);position:relative}
+.optc:hover{border-color:var(--acc)}.optc.cur{box-shadow:inset 0 0 0 2px var(--acc)}
+.optc .k{font-weight:700;font-size:13px}.optc .r{color:var(--mut);font-size:11.5px}
+.optc .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px;font-size:11px;color:var(--mut)}.optc .g3 b{display:block;color:var(--tx);font-size:12.5px}
+.tag{position:absolute;right:9px;top:8px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px}
+.lotc{border:1px solid var(--line);border-left:4px solid;border-radius:11px;padding:9px 11px;margin-bottom:8px;background:var(--panel2);cursor:pointer}
+.lotc:hover,.lotc.on{border-color:var(--acc)}
+.lotc b{font-size:13px}.lotc .s{color:var(--mut);font-size:11.5px}
+.split{display:flex;gap:6px;margin-top:6px;font-size:11px}.split>div{flex:1;background:var(--line);border-radius:7px;padding:5px 7px}.split b{display:block;font-size:13px}
+#tl{display:flex;flex-direction:column;gap:6px;width:100%}
+#tl .track{position:relative;height:26px;border-radius:7px;background:var(--line);overflow:hidden}
+#tl .sg{position:absolute;top:3px;bottom:3px;border-radius:5px;cursor:pointer;min-width:5px;opacity:.9}
+#tl .sg.fut{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 4px,transparent 4px 8px)!important}
+#tl .now{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--tx)}
+#tl .ax{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut)}
+#help{position:fixed;inset:0;display:none;place-items:center;z-index:40;background:rgba(0,0,0,.4)}
+#help .panel{position:relative;padding:22px 26px;width:520px}
+#help table{width:100%;border-collapse:collapse;font-size:12.5px}#help td{padding:6px 4px;border-bottom:1px dashed var(--line)}#help td:first-child{width:110px}
+kbd{font-family:ui-monospace,Menlo,monospace;font-size:11px;padding:2px 6px;border-radius:5px;border:1px solid var(--line);background:var(--panel2)}
+#err{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:40px}
+.ins{font-size:12px;background:linear-gradient(135deg,rgba(14,165,233,.14),rgba(34,197,94,.1));border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:10px}
+.ins b{color:var(--acc)}
+.delta{font-weight:700}.delta.up{color:var(--bad)}.delta.dn{color:var(--good)}
+.mini{font-size:11px;color:var(--mut)}
+::-webkit-scrollbar{width:7px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
+@media (max-width:1300px){#left{width:280px}#right{width:320px}#bottom{max-width:calc(100% - 640px)}}
+</style>
+</head>
+<body>
+<canvas id="cv" tabindex="0"></canvas>
+<div id="vig"></div>
+<div id="labels"></div>
+<div id="top">
+  <div class="panel brand"><div class="mark"></div><div><b>TRACE</b><span>Container Carbon Twin · concept demo, illustrative data</span></div></div>
+  <div class="panel" id="crumb"></div>
+  <div class="sp"></div>
+  <div class="panel btns">
+    <a class="btn" href="./" title="Back to TRACE Control Tower" style="text-decoration:none">← Control Tower</a>
+    <button class="btn pri" id="bTour" title="Play the story (P)">▶ Play story</button>
+    <button class="btn" id="bPause" title="Pause traffic (Space)">❚❚</button>
+    <button class="btn" id="bTheme" title="Projector / light mode (T)">☀ Light</button>
+    <button class="btn" id="bHelp" title="Controls (H)">?</button>
+    <button class="btn" id="bFull" title="Full screen (F)">⛶</button>
+    <a class="btn" id="bPortal" target="_blank" rel="noopener" style="display:none">Portal ↗</a>
+  </div>
+</div>
+<div class="panel" id="left"></div>
+<div class="panel" id="right"></div>
+<div class="panel" id="bottom"></div>
+<div class="panel" id="caption"></div>
+<div class="panel" id="tip"></div>
+<div id="fade"></div>
+<div id="help"><div class="panel"><div class="h">Controls</div><table>
+<tr><td><kbd>Drag</kbd></td><td>Orbit · <kbd>Right-drag</kbd> or <kbd>Shift</kbd>+drag to pan · <kbd>Scroll</kbd> to zoom</td></tr>
+<tr><td><kbd>Hover</kbd> / <kbd>Click</kbd></td><td>Hover a truck or box for its card; click to open it</td></tr>
+<tr><td><kbd>1</kbd>–<kbd>4</kbd></td><td>Jump to a featured box</td></tr>
+<tr><td><kbd>Enter</kbd></td><td>Next step: open box → trace journey</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>Back one level</td></tr>
+<tr><td><kbd>D</kbd></td><td>Journey: switch leg length (balanced → true distance → CO₂)</td></tr>
+<tr><td><kbd>R</kbd></td><td>Journey: replay the trace-back</td></tr>
+<tr><td><kbd>P</kbd></td><td>Play / stop the guided story</td></tr>
+<tr><td><kbd>Space</kbd> · <kbd>T</kbd> · <kbd>F</kbd></td><td>Pause traffic · light (projector) theme · full screen</td></tr>
+<tr><td><kbd>V</kbd></td><td>Hide / show the side panels for a clean 3D view</td></tr>
+</table><p class="hint">Numbers follow the TRACE deck: truck 1.64 kg CO₂/box-km (incl. empty return), rail 0.30 kg/TEU-km, sea per lane in g/TEU-km, 10 kg per lift. Shared legs are split by mass (ISO 14083 / GLEC). All boxes, suppliers and timestamps are illustrative.</p>
+<button class="btn" onclick="App.help(false)">Close</button></div></div>
+<div id="err"><div><h2>3D view needs WebGL</h2><p>Open this file in a recent Chrome, Edge, Safari or Firefox with hardware acceleration on.</p></div></div>
+<script>// ================= DATA MODEL =================
+// All numbers illustrative, aligned with the TRACE deck & portal:
+// truck 1.64 kg/box-km (incl. empty return), rail 0.30 kg/TEU-km, sea per lane (g/TEU-km), 10 kg per lift.
+const EF = {
+  roadBox:  { v: 1.64,   unit: 'kg CO₂e / box-km', label: 'Diesel truck with box', src: 'SFC India diesel default: 0.92 loaded + 0.72 empty return' },
+  roadLng:  { v: 1.393,  unit: 'kg CO₂e / box-km', label: 'LNG truck with box', src: 'Fleet data: LNG ≈15% below diesel' },
+  roadEmpty:{ v: 0.72,   unit: 'kg CO₂e / box-km', label: 'Truck moving an empty box', src: 'SFC India diesel default, empty running' },
+  roadTkm:  { v: 0.0911, unit: 'kg CO₂e / t-km',  label: 'Supplier truck, per tonne-km', src: '1.64 kg/box-km ÷ 18 t average load' },
+  railTeu:  { v: 0.30,   unit: 'kg CO₂e / TEU-km', label: 'Electric container rake', src: 'Rake data × deck factor' },
+  railTkm:  { v: 0.0167, unit: 'kg CO₂e / t-km',  label: 'Freight rail, per tonne-km', src: '0.30 kg/TEU-km ÷ 18 t (default)' },
+  bargeTkm: { v: 0.031,  unit: 'kg CO₂e / t-km',  label: 'Inland barge', src: 'GLEC default, inland waterway' },
+  lift:     { v: 10,     unit: 'kg CO₂e / lift',  label: 'Crane / reach-stacker lift', src: 'Deck factor: 10 kg per move' },
+};
+const DQ = {
+  1: { tag: 'L1', name: 'Primary data', desc: 'Measured fuel or carrier voyage report', col: '#22c55e' },
+  2: { tag: 'L2', name: 'Activity data', desc: 'Real trip data (e-way bill, FASTag, FOIS, AIS) × factor', col: '#eab308' },
+  3: { tag: 'L3', name: 'Default estimate', desc: 'Planned distance × default factor', col: '#94a3b8' },
+};
+const MODES = {
+  road:  { name: 'Road', col: '#fb923c' },
+  rail:  { name: 'Rail', col: '#4ade80' },
+  sea:   { name: 'Sea', col: '#60a5fa' },
+  barge: { name: 'Inland water', col: '#2dd4bf' },
+  lift:  { name: 'Handling', col: '#cbd5e1' },
+};
+const FLOWS = {
+  Import:   { col: '#3b82f6', label: 'Import' },
+  Export:   { col: '#f59e0b', label: 'Export' },
+  Domestic: { col: '#a855f7', label: 'Domestic' },
+};
+const LOTCOLS = ['#f472b6', '#facc15', '#22d3ee'];
+const BOXCOL = '#94a3b8';
+const PRICE = 6000; // internal carbon price ₹/t (deck)
+
+// ---------- helpers ----------
+let _seed = 20271;
+function rnd() { _seed = (_seed * 16807) % 2147483647; return (_seed - 1) / 2147483646; }
+function pick(a) { return a[Math.floor(rnd() * a.length)]; }
+function isoCheck(code) {
+  const map = {}; let v = 10;
+  for (const ch of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') { if (v % 11 === 0) v++; map[ch] = v; v++; }
+  let s = 0; for (let i = 0; i < 10; i++) { const c = code[i]; const n = /[A-Z]/.test(c) ? map[c] : +c; s += n * Math.pow(2, i); }
+  return (s % 11) % 10;
+}
+function boxId(owner, num) { const base = owner + String(num).padStart(6, '0'); return base + isoCheck(base); }
+function fmtId(id) { return id.slice(0, 4) + ' ' + id.slice(4, 10) + ' ' + id.slice(10); }
+const NOW = new Date(Date.UTC(2027, 8, 25, 5, 12)); // 25 Sep 2027 10:42 IST
+function at(dDays, hh = 10, mm = 0) { const d = new Date(NOW.getTime()); d.setUTCDate(d.getUTCDate() + dDays); d.setUTCHours(hh - 5, mm - 30); return d; }
+function fmtDT(d) { const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; const ist = new Date(d.getTime() + 330 * 60000); return `${ist.getUTCDate()} ${M[ist.getUTCMonth()]} ${String(ist.getUTCHours()).padStart(2,'0')}:${String(ist.getUTCMinutes()).padStart(2,'0')}`; }
+function fmtD(d) { const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; const ist = new Date(d.getTime() + 330 * 60000); return `${ist.getUTCDate()} ${M[ist.getUTCMonth()]}`; }
+const kg = (x) => x >= 995 ? (x / 1000).toFixed(2) + ' t' : Math.round(x) + ' kg';
+const int = (x) => Math.round(x).toLocaleString('en-IN');
+const inr = (x) => '₹' + Math.round(x).toLocaleString('en-IN');
+
+// ---------- box assembly ----------
+function mkBox(o) {
+  const b = Object.assign({ legs: [], lifts: [], nodes: {} }, o);
+  b.lots.forEach((l, i) => { l.color = l.color || LOTCOLS[i % 3]; l.idx = i; });
+  b.mass = b.lots.reduce((a, l) => a + l.t, 0);
+  compute(b);
+  return b;
+}
+function lotsBy(b, strands) { return strands.includes('BOX') ? b.lots : b.lots.filter((l) => strands.includes(l.id)); }
+function compute(b) {
+  b.lots.forEach((l) => { l.kg = 0; l.own = 0; l.shared = 0; });
+  b.total = 0; b.outside = 0; b.byMode = { road: 0, rail: 0, sea: 0, barge: 0, lift: 0 }; b.km = { road: 0, rail: 0, sea: 0, barge: 0 };
+  b.byDq = { 1: 0, 2: 0, 3: 0 };
+  const all = [...b.legs, ...b.lifts];
+  for (const L of all) {
+    const lots = lotsBy(b, L.strands);
+    const m = lots.reduce((a, l) => a + l.t, 0);
+    if (L.basis === 'tkm') L.kg = m * L.km * L.ef;
+    else if (L.basis === 'lift') L.kg = L.moves * L.ef;
+    else L.kg = L.km * L.ef;
+    L.alloc = lots.map((l) => ({ id: l.id, kg: L.kg * l.t / m, share: l.t / m }));
+    if (L.outside) { b.outside += L.kg; continue; }
+    b.total += L.kg;
+    const md = L.basis === 'lift' ? 'lift' : L.mode; b.byMode[md] += L.kg;
+    if (L.basis !== 'lift') b.km[L.mode] += L.km;
+    b.byDq[L.dq] += L.kg;
+    const solo = lots.length === 1 && !L.strands.includes('BOX');
+    for (const a of L.alloc) { const l = b.lots.find((x) => x.id === a.id); l.kg += a.kg; if (solo) l.own += a.kg; else l.shared += a.kg; }
+  }
+  b.lots.forEach((l) => { l.kgt = l.kg / l.t; });
+  b.kgt = b.total / b.mass;
+  b.l12 = (b.byDq[1] + b.byDq[2]) / b.total;
+  const kmTot = Object.values(b.km).reduce((a, x) => a + x, 0);
+  b.kmTot = kmTot;
+}
+function leg(o) { return Object.assign({ basis: 'box', dq: 3, scope: 'Cat. 4', paid: 'Tata Steel', events: [] }, o); }
+function lift(node, strands, o = {}) { return Object.assign({ basis: 'lift', mode: 'lift', node, strands, moves: 1, ef: EF.lift.v, efUnit: EF.lift.unit, efSrc: EF.lift.src, dq: 3, scope: 'Cat. 4', paid: 'Tata Steel', label: 'Lift', events: [] }, o); }
+
+// ---------- LANE BUILDERS ----------
+const CHINA_OPT = {
+  A: { carrier: 'Carrier E', route: 'Via Singapore, truck Haldia → plant', freight: 102000, days: 24, ot: 93, km: 7300, g: 62.5, dq: 2, src: 'Carrier E lane factor (EDI)', ts: { node: 'sin', name: 'Singapore', sub: 'Transshipment' } },
+  B: { carrier: 'Carrier D', route: 'Direct sailing, rail Haldia → Tatanagar', freight: 102900, days: 22, ot: 91, km: 7000, g: 60.5, dq: 1, src: 'Carrier D voyage report (API)' },
+  C: { carrier: 'Carrier C', route: 'Via Colombo, truck Haldia → plant', freight: 99800, days: 27, ot: 71, km: 7600, g: 69.2, dq: 2, src: 'Carrier C lane factor (EDI)', ts: { node: 'cmb', name: 'Colombo', sub: 'Transshipment' } },
+};
+function importChina(p) {
+  const opt = CHINA_OPT[p.option || 'B'];
+  const nodes = {
+    cfs: { name: 'Hefei ICD', sub: 'CFS: lots consolidated', kind: 'icd' },
+    sha: { name: 'Shanghai Yangshan', sub: 'Port of loading', kind: 'port' },
+    hal: { name: 'Haldia Dock', sub: 'Port of discharge', kind: 'port' },
+    jsr: { name: 'Jamshedpur Works', sub: 'Tata Steel plant', kind: 'plant' },
+  };
+  const legs = [], lifts = [];
+  const d0 = -(opt.days + 2);
+  p.lots.forEach((l, i) => {
+    let prev = 'o' + l.id;
+    nodes[prev] = { name: l.place, sub: l.supplier, kind: 'supplier' };
+    l.first.forEach((f, j) => {
+      const last = j === l.first.length - 1;
+      const to = last ? 'cfs' : 'y' + l.id + j;
+      if (!last) nodes[to] = { name: f.toName, sub: 'Rail yard', kind: 'rail' };
+      const isRail = f.mode === 'rail';
+      legs.push(leg({ from: prev, to, mode: f.mode, km: f.km, basis: 'tkm', ef: isRail ? EF.railTkm.v : EF.roadTkm.v, efUnit: isRail ? EF.railTkm.unit : EF.roadTkm.unit, efSrc: isRail ? EF.railTkm.src : EF.roadTkm.src, strands: [l.id], dq: f.dq || 3, dqSrc: f.dq === 2 ? 'Supplier ASN + truck GPS (supplier clause)' : 'Supplier address × planned route', scope: 'Cat. 1', paid: 'Supplier (FOB)', carrier: isRail ? 'China rail freight' : 'Supplier\'s trucker', vehicle: isRail ? 'Wagon load' : 'General cargo truck', t0: at(d0 - 3 + i * 0.3 + j * 0.5, 8), t1: at(d0 - 3 + i * 0.3 + j * 0.5 + 0.4, 18), events: [[at(d0 - 3 + i * 0.3, 8), 'Picked up at supplier', 'Supplier ASN'], [at(d0 - 2.5 + i * 0.3, 16), 'Received at Hefei CFS', 'CFS tally']] }));
+      prev = to;
+    });
+  });
+  const all = p.lots.map((l) => l.id);
+  lifts.push(lift('cfs', all, { label: 'Stuffing at CFS', scope: 'Cat. 1', paid: 'Supplier (FOB)', dqSrc: 'CFS tally sheet', t0: at(d0 - 1, 11), events: [[at(d0 - 1, 11), 'Container stuffed & sealed', 'CFS tally']] }));
+  legs.push(leg({ from: 'cfs', to: 'sha', mode: 'rail', km: 400, ef: EF.railTeu.v, efUnit: EF.railTeu.unit, efSrc: EF.railTeu.src, strands: all, dq: 3, dqSrc: 'Forwarder distance × default factor', scope: 'Cat. 1', paid: 'Supplier (FOB)', carrier: 'China rail (sea-rail service)', vehicle: 'Container rake', t0: at(d0 - 1, 20), t1: at(d0, 9), events: [[at(d0 - 1, 20), 'Rake departed Hefei', 'Forwarder EDI'], [at(d0, 9), 'Gate-in Yangshan', 'Port EDI']] }));
+  lifts.push(lift('sha', all, { label: 'Loading at Shanghai', dqSrc: 'Terminal lift count', t0: at(d0 + 0.5, 6), events: [[at(d0 + 0.5, 6), 'Loaded on vessel', 'Carrier API']] }));
+  if (opt.ts) {
+    nodes[opt.ts.node] = { name: opt.ts.name, sub: opt.ts.sub, kind: 'port' };
+    const f = opt.km * 0.62;
+    legs.push(leg({ from: 'sha', to: opt.ts.node, mode: 'sea', km: Math.round(f), ef: opt.g / 1000, efUnit: 'kg CO₂e / TEU-km', efSrc: opt.src, strands: all, dq: opt.dq, dqSrc: opt.src, carrier: opt.carrier, vehicle: 'Mainline vessel', t0: at(d0 + 0.6, 4), t1: at(d0 + 9, 7), events: [[at(d0 + 0.6, 4), 'Vessel sailed', 'AIS'], [at(d0 + 9, 7), 'Arrived ' + opt.ts.name, 'AIS']] }));
+    lifts.push(lift(opt.ts.node, all, { moves: 2, label: 'Transshipment (2 lifts)', dqSrc: 'Carrier event log', t0: at(d0 + 10, 9) }));
+    legs.push(leg({ from: opt.ts.node, to: 'hal', mode: 'sea', km: opt.km - Math.round(f), ef: opt.g / 1000, efUnit: 'kg CO₂e / TEU-km', efSrc: opt.src, strands: all, dq: opt.dq, dqSrc: opt.src, carrier: opt.carrier, vehicle: 'Feeder vessel', t0: at(d0 + 11, 3), t1: at(-3, 14), events: [[at(d0 + 11, 3), 'Feeder sailed', 'AIS'], [at(-3, 14), 'Berthed Haldia', 'AIS']] }));
+  } else {
+    legs.push(leg({ from: 'sha', to: 'hal', mode: 'sea', km: opt.km, ef: opt.g / 1000, efUnit: 'kg CO₂e / TEU-km', efSrc: opt.src, strands: all, dq: opt.dq, dqSrc: opt.src, carrier: opt.carrier, vehicle: 'Container ship, direct call', t0: at(d0 + 0.6, 4), t1: at(-4, 14), events: [[at(d0 + 0.6, 4), 'Vessel sailed (direct)', 'AIS'], [at(d0 + 8, 12), 'Passed Singapore Strait', 'AIS'], [at(-4, 14), 'Berthed Haldia', 'AIS'], [at(-4, 18), 'Voyage CO₂ report received', 'Carrier API']] }));
+  }
+  lifts.push(lift('hal', all, { label: 'Unloading at Haldia', dq: 2, dqSrc: 'Port gate (PCS) lift count', t0: at(-3, 9), events: [[at(-3, 9), 'Discharged, gate-out', 'Port Community System']] }));
+  if (p.option === 'A' || p.option === 'C') {
+    legs.push(leg({ from: 'hal', to: 'jsr', mode: 'road', km: 250, ef: EF.roadBox.v, efUnit: EF.roadBox.unit, efSrc: EF.roadBox.src, strands: all, dq: 2, dqSrc: 'E-way bill distance + FASTag pings (ULIP)', carrier: 'Trucker (contract)', vehicle: 'Diesel tractor-trailer', t0: at(-1, 8), t1: at(0, 10, 30), events: [[at(-1, 8), 'E-way bill generated', 'GST e-way bill'], [at(-1, 14), 'FASTag toll ping ×4', 'ULIP / FASTag'], [at(0, 10, 30), 'Gate-in Jamshedpur', 'Plant gate']] }));
+  } else {
+    nodes.tat = { name: 'Tatanagar ICD', sub: 'Rail depot', kind: 'icd' };
+    legs.push(leg({ from: 'hal', to: 'tat', mode: 'rail', km: 250, ef: EF.railTeu.v, efUnit: EF.railTeu.unit, efSrc: EF.railTeu.src, strands: all, dq: 2, dqSrc: 'Rake data (FOIS) × factor', carrier: 'Rail operator 1', vehicle: 'Electric loco, BLC flat wagons', t0: at(-2, 21), t1: at(-1, 6), events: [[at(-2, 21), 'Rake departed Haldia', 'FOIS'], [at(-1, 6), 'Rake arrived, RR closed', 'FOIS']] }));
+    lifts.push(lift('tat', all, { label: 'Handling at depot', dq: 2, dqSrc: 'ICD gate log', t0: at(-1, 9) }));
+    legs.push(leg({ from: 'tat', to: 'jsr', mode: 'road', km: 20, ef: EF.roadBox.v, efUnit: EF.roadBox.unit, efSrc: EF.roadBox.src, strands: all, dq: 2, dqSrc: 'ULIP trip + e-way bill', carrier: 'Trucker (contract)', vehicle: 'Diesel tractor-trailer', t0: at(0, 9, 55), t1: at(0, 10, 40), events: [[at(0, 9, 55), 'E-way bill generated', 'GST e-way bill'], [at(0, 10, 40), 'Gate-in Jamshedpur, weighbridge', 'Plant gate']] }));
+  }
+  const b = mkBox({ id: p.id, flow: 'Import', from: 'Shanghai', to: 'Jamshedpur', lane: 'Shanghai → Jamshedpur', inco: 'FOB Shanghai', lots: p.lots, nodes, legs, lifts, option: p.option || 'B', opt, builder: importChina, params: p, optSet: CHINA_OPT,
+    note: 'FOB: Tata Steel books the sea leg; supplier-paid legs before loading are Scope 3 Cat. 1.' });
+  b.docs = [['Supplier ASN / packing list', 'Supplier clause', 3], ['Bill of lading', 'Carrier API', 1], ['Vessel track', 'AIS', 2], ['Port gate-out', 'Port Community System', 2], ['Rail receipt', 'FOIS', 2], ['E-way bill + FASTag', 'ULIP', 2]];
+  return b;
+}
+
+const EU_OPT = {
+  A: { carrier: 'Carrier B', route: 'Truck to Haldia, via Colombo', freight: 152000, days: 31, ot: 89, km: 15100, g: 67.8, dq: 2, src: 'Carrier B lane factor (EDI)', truck: true },
+  B: { carrier: 'Carrier A', route: 'Rail to Haldia, direct sailing', freight: 154800, days: 29, ot: 92, km: 14700, g: 55.0, dq: 1, src: 'Carrier A voyage report (API)', truck: false },
+  C: { carrier: 'Carrier C', route: 'Truck to Haldia, via Colombo', freight: 147500, days: 33, ot: 72, km: 15100, g: 89.7, dq: 2, src: 'Carrier C lane factor (EDI)', truck: true },
+};
+function exportEU(p) {
+  const opt = EU_OPT[p.option || 'B'];
+  const nodes = {
+    dep: { name: 'Tatanagar ICD', sub: 'Empty box picked up', kind: 'icd' },
+    cy: { name: 'Plant container yard', sub: 'Jamshedpur: stuffing', kind: 'plant' },
+    hal: { name: 'Haldia Dock', sub: 'Port of loading', kind: 'port' },
+    rtm: { name: 'Rotterdam', sub: 'Port of discharge (CIF)', kind: 'port' },
+    cus: { name: 'Duisburg', sub: 'Customer site (their freight)', kind: 'supplier' },
+  };
+  const all = p.lots.map((l) => l.id);
+  const legs = [], lifts = [];
+  legs.push(leg({ from: 'dep', to: 'cy', mode: 'road', km: 20, ef: EF.roadEmpty.v, efUnit: EF.roadEmpty.unit, efSrc: EF.roadEmpty.src, strands: ['BOX'], empty: true, dq: 2, dqSrc: 'ULIP trip (empty box)', carrier: 'Trucker (contract)', vehicle: 'Truck + empty 20ft', t0: at(-1, 7), t1: at(-1, 8), events: [[at(-1, 7), 'Empty box released', 'Carrier API'], [at(-1, 8), 'Gate-in empty', 'Plant gate']] }));
+  p.lots.forEach((l, i) => {
+    nodes['o' + l.id] = { name: l.place, sub: 'Jamshedpur Works', kind: 'mill' };
+    legs.push(leg({ from: 'o' + l.id, to: 'cy', mode: 'road', km: l.inKm, basis: 'tkm', ef: EF.roadTkm.v, efUnit: EF.roadTkm.unit, efSrc: EF.roadTkm.src, strands: [l.id], dq: 2, dqSrc: 'Plant yard system (trailer moves)', carrier: 'In-plant logistics', vehicle: 'Coil trailer', t0: at(-1, 9 + i), t1: at(-1, 10 + i), events: [[at(-1, 9 + i), 'Released from ' + l.place, 'SAP dispatch']] }));
+  });
+  lifts.push(lift('cy', all, { label: 'Stuffing (reach stacker)', dq: 2, dqSrc: 'Yard lift log', t0: at(-1, 15), events: [[at(-1, 15), 'Stuffed & sealed', 'Yard system']] }));
+  if (opt.truck) {
+    legs.push(leg({ from: 'cy', to: 'hal', mode: 'road', km: 270, ef: EF.roadBox.v, efUnit: EF.roadBox.unit, efSrc: EF.roadBox.src, strands: all, dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: 'Trucker (contract)', vehicle: 'Diesel tractor-trailer', t0: at(0, 11), t1: at(1, 4), events: [[at(0, 11), 'Gate-out Jamshedpur', 'Plant gate']] }));
+  } else {
+    nodes.tat = { name: 'Tatanagar ICD', sub: 'Rail head', kind: 'icd' };
+    legs.push(leg({ from: 'cy', to: 'tat', mode: 'road', km: 20, ef: EF.roadBox.v, efUnit: EF.roadBox.unit, efSrc: EF.roadBox.src, strands: all, dq: 2, dqSrc: 'ULIP trip + e-way bill', carrier: 'Trucker (contract)', vehicle: 'Diesel tractor-trailer', t0: at(0, 10, 45), t1: at(0, 11, 30), events: [[at(0, 10, 45), 'Gate-out Jamshedpur', 'Plant gate'], [at(0, 11, 30), 'Gate-in ICD', 'ICD gate log']] }));
+    lifts.push(lift('tat', all, { label: 'Rake loading', dq: 2, dqSrc: 'ICD lift log', t0: at(0, 18) }));
+    legs.push(leg({ from: 'tat', to: 'hal', mode: 'rail', km: 250, ef: EF.railTeu.v, efUnit: EF.railTeu.unit, efSrc: EF.railTeu.src, strands: all, dq: 2, dqSrc: 'Rake data (FOIS) × factor', carrier: 'Rail operator 1', vehicle: 'Electric loco, BLC flat wagons', t0: at(0, 22), t1: at(1, 7), events: [[at(0, 22), 'Rake departed', 'FOIS']] }));
+  }
+  lifts.push(lift('hal', all, { label: 'Loading at Haldia', dq: 2, dqSrc: 'Port lift count', t0: at(2, 8) }));
+  if (opt.truck) {
+    nodes.cmb = { name: 'Colombo', sub: 'Transshipment', kind: 'port' };
+    legs.push(leg({ from: 'hal', to: 'cmb', mode: 'sea', km: 2300, ef: opt.g / 1000, efUnit: 'kg CO₂e / TEU-km', efSrc: opt.src, strands: all, dq: opt.dq, dqSrc: opt.src, carrier: opt.carrier, vehicle: 'Feeder vessel', t0: at(3, 6), t1: at(7, 6) }));
+    lifts.push(lift('cmb', all, { moves: 2, label: 'Transshipment (2 lifts)', dqSrc: 'Carrier event log', t0: at(8, 10) }));
+    legs.push(leg({ from: 'cmb', to: 'rtm', mode: 'sea', km: opt.km - 2300, ef: opt.g / 1000, efUnit: 'kg CO₂e / TEU-km', efSrc: opt.src, strands: all, dq: opt.dq, dqSrc: opt.src, carrier: opt.carrier, vehicle: 'Mainline vessel', t0: at(9, 6), t1: at(opt.days - 2, 6) }));
+  } else {
+    legs.push(leg({ from: 'hal', to: 'rtm', mode: 'sea', km: opt.km, ef: opt.g / 1000, efUnit: 'kg CO₂e / TEU-km', efSrc: opt.src, strands: all, dq: opt.dq, dqSrc: opt.src, carrier: opt.carrier, vehicle: 'Container ship, direct call', t0: at(2, 20), t1: at(opt.days - 2, 6), events: [[at(2, 20), 'Vessel sailed', 'AIS'], [at(opt.days - 2, 6), 'ETA Rotterdam', 'Carrier API']] }));
+  }
+  lifts.push(lift('rtm', all, { label: 'Discharge at Rotterdam', dq: 3, dqSrc: 'Estimate', t0: at(opt.days - 1, 10) }));
+  legs.push(leg({ from: 'rtm', to: 'cus', mode: 'barge', km: 220, basis: 'tkm', ef: EF.bargeTkm.v, efUnit: EF.bargeTkm.unit, efSrc: EF.bargeTkm.src, strands: all, dq: 3, dqSrc: 'Customer-booked; shared for their footprint', outside: true, scope: 'Cat. 9', paid: 'Customer', carrier: 'Customer\'s barge operator', vehicle: 'Rhine barge', t0: at(opt.days, 8), t1: at(opt.days + 1, 8) }));
+  const b = mkBox({ id: p.id, flow: 'Export', from: 'Jamshedpur', to: 'Rotterdam', lane: 'Jamshedpur → Rotterdam', inco: 'CIF Rotterdam', lots: p.lots, nodes, legs, lifts, option: p.option || 'B', opt, builder: exportEU, params: p, optSet: EU_OPT,
+    note: 'CIF: Tata Steel pays to Rotterdam (Scope 3 Cat. 4). The customer\'s barge is shown but not counted (their Cat. 4, our Cat. 9).' });
+  const sea = b.legs.filter((l) => l.mode === 'sea').reduce((a, l) => a + l.kg, 0);
+  b.ets = 0.5 * sea / 1000 * 88 * 107;
+  b.docs = [['SAP delivery + dispatch', 'SAP', 2], ['Shipping bill', 'ICEGATE', 2], ['Rail receipt', 'FOIS', 2], ['Bill of lading', 'Carrier API', 1], ['Voyage CO₂ report', 'Carrier API', 1], ['Vessel track', 'AIS', 2]];
+  return b;
+}
+
+const NORTH_OPT = {
+  A: { carrier: 'Transporter 1', route: 'Diesel truck, 1,630 km', freight: 86800, days: 4, ot: 85 },
+  B: { carrier: 'Rail operator 1', route: 'Rail with truck at both ends', freight: 71000, days: 6, ot: 82 },
+  C: { carrier: 'Transporter 2', route: 'LNG truck, 1,630 km', freight: 89500, days: 4, ot: 86 },
+};
+function domNorth(p) {
+  const o = p.option || 'B', opt = NORTH_OPT[o];
+  const l = p.lots[0];
+  const nodes = { sup: { name: 'Ludhiana', sub: l.supplier, kind: 'supplier' }, jsr: { name: 'Jamshedpur Works', sub: 'Tata Steel plant', kind: 'plant' } };
+  const legs = [], lifts = [];
+  const all = p.lots.map((x) => x.id);
+  if (o === 'B') {
+    nodes.ldh = { name: 'Ludhiana ICD', sub: 'Dhandari Kalan', kind: 'icd' };
+    nodes.tat = { name: 'Tatanagar ICD', sub: 'Rail depot', kind: 'icd' };
+    legs.push(leg({ from: 'sup', to: 'ldh', mode: 'road', km: 25, ef: EF.roadBox.v, efUnit: EF.roadBox.unit, efSrc: EF.roadBox.src, strands: all, dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: 'Trucker (local)', vehicle: 'Diesel tractor-trailer', t0: at(-7, 9), t1: at(-7, 11), events: [[at(-7, 9), 'E-way bill generated', 'GST e-way bill']] }));
+    lifts.push(lift('ldh', all, { label: 'Rake loading', dq: 2, dqSrc: 'ICD lift log', t0: at(-7, 15) }));
+    legs.push(leg({ from: 'ldh', to: 'tat', mode: 'rail', km: 1690, ef: EF.railTeu.v, efUnit: EF.railTeu.unit, efSrc: EF.railTeu.src, strands: all, dq: 2, dqSrc: 'Rake data (FOIS) × factor', carrier: 'Rail operator 1', vehicle: 'Double-stack ready rake (DFC)', t0: at(-6, 2), t1: at(-1, 20), events: [[at(-6, 2), 'Rake departed Ludhiana', 'FOIS'], [at(-4, 10), 'Passed Dadri / DFC', 'FOIS'], [at(-1, 20), 'Rake placed Tatanagar', 'FOIS']] }));
+    lifts.push(lift('tat', all, { label: 'Handling at depot', dq: 2, dqSrc: 'ICD gate log', t0: at(0, 8) }));
+    legs.push(leg({ from: 'tat', to: 'jsr', mode: 'road', km: 20, ef: EF.roadBox.v, efUnit: EF.roadBox.unit, efSrc: EF.roadBox.src, strands: all, dq: 2, dqSrc: 'ULIP trip + e-way bill', carrier: 'Trucker (contract)', vehicle: 'Diesel tractor-trailer', t0: at(0, 9, 50), t1: at(0, 10, 35), events: [[at(0, 10, 35), 'Gate-in Jamshedpur', 'Plant gate']] }));
+  } else {
+    const e = o === 'C' ? EF.roadLng : EF.roadBox;
+    legs.push(leg({ from: 'sup', to: 'jsr', mode: 'road', km: 1630, ef: e.v, efUnit: e.unit, efSrc: e.src, strands: all, dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: opt.carrier, vehicle: o === 'C' ? 'LNG tractor-trailer' : 'Diesel tractor-trailer', t0: at(-4, 8), t1: at(0, 10, 30), events: [[at(-4, 8), 'E-way bill generated', 'GST e-way bill'], [at(-2, 12), 'FASTag toll pings ×19', 'ULIP / FASTag']] }));
+  }
+  const b = mkBox({ id: p.id, flow: 'Domestic', from: 'Ludhiana', to: 'Jamshedpur', lane: 'Ludhiana → Jamshedpur', inco: 'Freight booked by Tata Steel', lots: p.lots, nodes, legs, lifts, option: o, opt, builder: domNorth, params: p, optSet: NORTH_OPT,
+    note: 'Full box from one supplier: every leg belongs to the single lot.' });
+  b.docs = [['Purchase order', 'SAP', 2], ['E-way bill', 'GST portal', 2], ['FASTag tolls', 'ULIP', 2], ['Rail receipt', 'FOIS', 2], ['Gate-in + weighbridge', 'Plant gate', 2]];
+  return b;
+}
+
+const MILK_OPT = {
+  A: { carrier: 'Two transporters', route: 'Two part-loaded trucks, one per plant', freight: 52000, days: 1.5, ot: 90 },
+  B: { carrier: 'Transporter 3', route: 'One milk-run truck: Belpahar → Joda → plant', freight: 38500, days: 2, ot: 88 },
+  C: { carrier: 'Transporter 4', route: 'Milk run on an LNG truck', freight: 40900, days: 2, ot: 87 },
+};
+function milkRun(p) {
+  const o = p.option || 'B', opt = MILK_OPT[o];
+  const [a, c] = p.lots; // a = Belpahar lot, c = Joda lot
+  const nodes = {
+    oL1: { name: 'Belpahar', sub: a.supplier, kind: 'supplier' },
+    oL2: { name: 'Joda', sub: c.supplier, kind: 'supplier' },
+    jsr: { name: 'Jamshedpur Works', sub: 'Tata Steel plant', kind: 'plant' },
+  };
+  const legs = [], lifts = [];
+  const e = o === 'C' ? EF.roadLng : EF.roadBox;
+  const ev = (d, h, t, s) => [at(d, h), t, s];
+  if (o === 'A') {
+    nodes.dep1 = { name: 'Jharsuguda depot', sub: 'Empty box', kind: 'icd' };
+    nodes.dep2 = { name: 'Barbil depot', sub: 'Empty box', kind: 'icd' };
+    legs.push(leg({ from: 'dep1', to: 'oL1', mode: 'road', km: 15, ef: EF.roadEmpty.v, efUnit: EF.roadEmpty.unit, efSrc: EF.roadEmpty.src, strands: ['L1'], empty: true, dq: 2, dqSrc: 'ULIP trip', carrier: 'Transporter 3', vehicle: 'Truck + empty box', t0: at(-2, 6), t1: at(-2, 7) }));
+    lifts.push(lift('oL1', ['L1'], { label: 'Stuffing L1', t0: at(-2, 9) }));
+    legs.push(leg({ from: 'oL1', to: 'jsr', mode: 'road', km: 330, ef: e.v, efUnit: e.unit, efSrc: e.src, strands: ['L1'], dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: 'Transporter 3', vehicle: 'Diesel truck, 8 t on board', t0: at(-2, 11), t1: at(-1, 6) }));
+    legs.push(leg({ from: 'dep2', to: 'oL2', mode: 'road', km: 20, ef: EF.roadEmpty.v, efUnit: EF.roadEmpty.unit, efSrc: EF.roadEmpty.src, strands: ['L2'], empty: true, dq: 2, dqSrc: 'ULIP trip', carrier: 'Transporter 5', vehicle: 'Truck + empty box', t0: at(-1, 6), t1: at(-1, 7) }));
+    lifts.push(lift('oL2', ['L2'], { label: 'Stuffing L2', t0: at(-1, 9) }));
+    legs.push(leg({ from: 'oL2', to: 'jsr', mode: 'road', km: 190, ef: e.v, efUnit: e.unit, efSrc: e.src, strands: ['L2'], dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: 'Transporter 5', vehicle: 'Diesel truck, 14 t on board', t0: at(-1, 11), t1: at(0, 10, 30) }));
+  } else {
+    nodes.dep1 = { name: 'Jharsuguda depot', sub: 'Empty box', kind: 'icd' };
+    legs.push(leg({ from: 'dep1', to: 'oL1', mode: 'road', km: 15, ef: EF.roadEmpty.v, efUnit: EF.roadEmpty.unit, efSrc: EF.roadEmpty.src, strands: ['BOX'], empty: true, dq: 2, dqSrc: 'ULIP trip (empty box)', carrier: opt.carrier, vehicle: 'Truck + empty box', t0: at(-2, 6), t1: at(-2, 7), events: [ev(-2, 6, 'Empty box picked up', 'ULIP')] }));
+    lifts.push(lift('oL1', ['L1'], { label: 'Stuffing L1 (castables)', dq: 2, dqSrc: 'Supplier ASN', t0: at(-2, 9), events: [ev(-2, 9, 'L1 loaded, part seal', 'Supplier ASN')] }));
+    legs.push(leg({ from: 'oL1', to: 'oL2', mode: 'road', km: 230, ef: e.v, efUnit: e.unit, efSrc: e.src, strands: ['L1'], dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: opt.carrier, vehicle: (o === 'C' ? 'LNG' : 'Diesel') + ' truck, 8 t on board', t0: at(-2, 11), t1: at(-1, 6), events: [ev(-2, 11, 'E-way bill (part load)', 'GST e-way bill'), ev(-2, 17, 'FASTag toll ping ×3', 'ULIP / FASTag')] }));
+    lifts.push(lift('oL2', ['L2'], { label: 'Stuffing L2 (ferro-manganese)', dq: 2, dqSrc: 'Supplier ASN', t0: at(-1, 9), events: [ev(-1, 9, 'L2 added, box sealed', 'Supplier ASN')] }));
+    legs.push(leg({ from: 'oL2', to: 'jsr', mode: 'road', km: 190, ef: e.v, efUnit: e.unit, efSrc: e.src, strands: ['L1', 'L2'], dq: 2, dqSrc: 'E-way bill + FASTag (ULIP)', carrier: opt.carrier, vehicle: (o === 'C' ? 'LNG' : 'Diesel') + ' truck, 22 t on board', t0: at(-1, 11), t1: at(0, 10, 30), events: [ev(-1, 11, 'E-way bill (full load)', 'GST e-way bill'), ev(0, 10, 'Approaching Jamshedpur', 'ULIP / FASTag')] }));
+  }
+  const b = mkBox({ id: p.id, flow: 'Domestic', from: 'Odisha', to: 'Jamshedpur', lane: 'Belpahar + Joda → Jamshedpur', inco: 'Freight booked by Tata Steel', lots: p.lots, nodes, legs, lifts, option: o, opt, builder: milkRun, params: p, optSet: MILK_OPT,
+    note: 'Milk run: the first 230 km carries only L1, so that leg is L1\'s alone. The last leg is split by mass.' });
+  b.docs = [['Purchase orders ×2', 'SAP', 2], ['E-way bills ×2', 'GST portal', 2], ['FASTag tolls', 'ULIP', 2], ['Supplier ASNs', 'Supplier clause', 2], ['Gate-in + weighbridge', 'Plant gate', 2]];
+  return b;
+}
+
+// ---------- CATALOGUES ----------
+const CAT = {
+  china: [
+    { name: 'Ferro-vanadium (FeV80)', short: 'FeV80', kind: 'drums', cat: 'Ferro-alloy', hs: '7202.92', place: "Ma'anshan", supplier: 'Alloy supplier, Anhui', first: [{ mode: 'road', km: 25, toName: "Ma'anshan rail yard" }, { mode: 'rail', km: 160 }] },
+    { name: 'Ferro-molybdenum (FeMo60)', short: 'FeMo', kind: 'drums', cat: 'Ferro-alloy', hs: '7202.70', place: "Lu'an", supplier: 'Alloy supplier, Anhui', first: [{ mode: 'road', km: 95 }] },
+    { name: 'MgO-C bricks', short: 'MgO-C bricks', kind: 'bricks', cat: 'Refractory (raw material)', hs: '6815.91', place: 'Tongcheng', supplier: 'Refractory works, Anhui', first: [{ mode: 'road', km: 125 }] },
+    { name: 'High-alumina bricks', short: 'Alumina bricks', kind: 'bricks', cat: 'Refractory (raw material)', hs: '6902.20', place: 'Chuzhou', supplier: 'Refractory works, Anhui', first: [{ mode: 'road', km: 60 }] },
+    { name: 'Mill bearings & couplings', short: 'Mill spares', kind: 'crate', cat: 'Engineering spares', hs: '8482.10', place: 'Feixi', supplier: 'Engineering supplier, Hefei', first: [{ mode: 'road', km: 45 }] },
+    { name: 'Hydraulic spares', short: 'Hydraulics', kind: 'crate', cat: 'Engineering spares', hs: '8412.21', place: 'Wuhu', supplier: 'Engineering supplier, Anhui', first: [{ mode: 'road', km: 130 }] },
+  ],
+  eu: [
+    { name: 'Cold-rolled coil', short: 'CR coil', kind: 'coil', cat: 'Finished steel', hs: '7209.17', place: 'Cold Rolling Mill', inKm: 4 },
+    { name: 'Galvanised coil', short: 'GI coil', kind: 'gi', cat: 'Finished steel', hs: '7210.49', place: 'Galvanising line', inKm: 5 },
+    { name: 'Precision tubes', short: 'Tubes', kind: 'tubes', cat: 'Finished steel', hs: '7306.30', place: 'Tubes Division', inKm: 7 },
+    { name: 'Wire rod coils', short: 'Wire rod', kind: 'wire', cat: 'Finished steel', hs: '7213.91', place: 'Wire Rod Mill', inKm: 6 },
+  ],
+  north: [
+    { name: 'Forged mill rolls', short: 'Mill rolls', kind: 'rolls', cat: 'Engineering spares', hs: '8455.30', supplier: 'Forge works, Ludhiana' },
+    { name: 'Gearbox overhaul units', short: 'Gearboxes', kind: 'crate', cat: 'Engineering spares', hs: '8483.40', supplier: 'Gear works, Ludhiana' },
+    { name: 'Conveyor idlers', short: 'Idlers', kind: 'crate', cat: 'Engineering spares', hs: '8431.39', supplier: 'Conveyor works, Ludhiana' },
+  ],
+};
+function cl(o, extra) { return Object.assign(JSON.parse(JSON.stringify(o)), extra); }
+
+// ---------- FEATURED BOXES ----------
+function featured() {
+  const c = CAT.china;
+  const F1 = importChina({ id: boxId('TRXU', 482193), option: 'B', lots: [
+    cl(c[0], { id: 'L1', t: 4.0, po: 'PO 4500-218734' }),
+    cl(c[2], { id: 'L2', t: 12.0, po: 'PO 4500-219102' }),
+    cl(c[4], { id: 'L3', t: 2.0, po: 'PO 4500-219377' }),
+  ] });
+  F1.hero = 'Import · 3 lots · ferro-alloy + refractory + spares';
+  F1.tag = 'The slide-3 box, opened up';
+  const e = CAT.eu;
+  const F2 = exportEU({ id: boxId('KDLU', 731406), option: 'B', lots: [
+    cl(e[0], { id: 'L1', t: 13.5, po: 'SO 7100-55201' }),
+    cl(e[2], { id: 'L2', t: 6.5, po: 'SO 7100-55219' }),
+  ] });
+  F2.hero = 'Export · 2 lots · CR coil + tubes';
+  F2.tag = 'EU carbon charge visible per box';
+  const F3 = domNorth({ id: boxId('MVNU', 260518), option: 'B', lots: [cl(CAT.north[0], { id: 'L1', t: 17.5, po: 'PO 4500-220014' })] });
+  F3.hero = 'Domestic · 1 lot · North → East by rail';
+  F3.tag = 'Rail instead of 1,630 km of trucking';
+  const F4 = milkRun({ id: boxId('SGCU', 905527), option: 'B', lots: [
+    { id: 'L1', name: 'Refractory castables', short: 'Castables', kind: 'castable', cat: 'Refractory (raw material)', hs: '3816.00', place: 'Belpahar', supplier: 'TRL Krosaki, Belpahar', t: 8.0, po: 'PO 4500-221608' },
+    { id: 'L2', name: 'HC ferro-manganese', short: 'FeMn', kind: 'bags', cat: 'Ferro-alloy', hs: '7202.11', place: 'Joda', supplier: 'Tata Steel FAMD, Joda', t: 14.0, po: 'STO 3100-08812' },
+  ] });
+  F4.hero = 'Domestic · 2 lots · ferro + raw, milk run';
+  F4.tag = 'Same box, different journeys';
+  return [F1, F2, F3, F4];
+}
+
+// ---------- GENERIC BOXES ----------
+const OWNERS = ['TRXU', 'KDLU', 'MVNU', 'SGCU', 'PLXU', 'ORLU', 'BQTU', 'NHCU'];
+let _gen = 0;
+function randomBox(kind) {
+  _gen++;
+  const id = boxId(pick(OWNERS), 100000 + Math.floor(rnd() * 899999));
+  kind = kind || pick(['china', 'china', 'eu', 'eu', 'north', 'milk']);
+  if (kind === 'china') {
+    const n = 1 + Math.floor(rnd() * 3);
+    const pool = CAT.china.slice().sort(() => rnd() - 0.5).slice(0, n);
+    const lots = pool.map((x, i) => cl(x, { id: 'L' + (i + 1), t: +(n === 1 ? 14 + rnd() * 8 : 2 + rnd() * (18 / n)).toFixed(1), po: 'PO 4500-' + (210000 + Math.floor(rnd() * 9999)) }));
+    return importChina({ id, option: rnd() < 0.75 ? 'B' : pick(['A', 'C']), lots });
+  }
+  if (kind === 'eu') {
+    const n = 1 + Math.floor(rnd() * 2);
+    const pool = CAT.eu.slice().sort(() => rnd() - 0.5).slice(0, n);
+    const lots = pool.map((x, i) => cl(x, { id: 'L' + (i + 1), t: +(n === 1 ? 18 + rnd() * 6 : 6 + rnd() * 8).toFixed(1), po: 'SO 7100-' + (50000 + Math.floor(rnd() * 9999)) }));
+    return exportEU({ id, option: rnd() < 0.7 ? 'B' : pick(['A', 'C']), lots });
+  }
+  if (kind === 'north') {
+    const x = pick(CAT.north);
+    return domNorth({ id, option: rnd() < 0.6 ? 'B' : pick(['A', 'C']), lots: [cl(x, { id: 'L1', t: +(12 + rnd() * 8).toFixed(1), po: 'PO 4500-' + (220000 + Math.floor(rnd() * 9999)) })] });
+  }
+  return milkRun({ id, option: rnd() < 0.7 ? 'B' : pick(['A', 'C']), lots: [
+    { id: 'L1', name: 'Refractory castables', short: 'Castables', kind: 'castable', cat: 'Refractory (raw material)', hs: '3816.00', place: 'Belpahar', supplier: 'TRL Krosaki, Belpahar', t: +(5 + rnd() * 5).toFixed(1), po: 'PO 4500-' + (221000 + Math.floor(rnd() * 999)) },
+    { id: 'L2', name: 'HC ferro-manganese', short: 'FeMn', kind: 'bags', cat: 'Ferro-alloy', hs: '7202.11', place: 'Joda', supplier: 'Tata Steel FAMD, Joda', t: +(10 + rnd() * 6).toFixed(1), po: 'STO 3100-' + (8000 + Math.floor(rnd() * 999)) },
+  ] });
+}
+function rebuild(b, option) {
+  const p = Object.assign({}, b.params, { option });
+  p.lots = b.params.lots.map((l) => Object.assign({}, l));
+  const nb = b.builder(p);
+  ['hero', 'tag', 'status'].forEach((k) => { nb[k] = b[k]; });
+  return nb;
+}
+function optionTotals(b) {
+  return Object.keys(b.optSet).map((k) => {
+    const nb = k === b.option ? b : rebuild(b, k);
+    const o = b.optSet[k];
+    const t2 = Math.round(nb.total / 10) / 100;
+    return { key: k, carrier: o.carrier, route: o.route, freight: o.freight, days: o.days, ot: o.ot, co2: nb.total, co2t: t2, adj: o.freight + t2 * PRICE };
+  });
+}
+
+// ================= MINI WEBGL ENGINE (no libraries) =================
+const M4 = {
+  id() { const m = new Float32Array(16); m[0] = m[5] = m[10] = m[15] = 1; return m; },
+  mul(a, b, o) {
+    o = o || new Float32Array(16); const t = M4._t;
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + j] * b[i * 4 + k]; t[i * 4 + j] = s; }
+    o.set(t); return o;
+  },
+  _t: new Float32Array(16),
+  persp(fovy, aspect, n, f) { const t = 1 / Math.tan(fovy / 2), nf = 1 / (n - f), o = new Float32Array(16); o[0] = t / aspect; o[5] = t; o[10] = (f + n) * nf; o[11] = -1; o[14] = 2 * f * n * nf; return o; },
+  lookAt(e, c, up) {
+    let z0 = e[0] - c[0], z1 = e[1] - c[1], z2 = e[2] - c[2]; let l = Math.hypot(z0, z1, z2) || 1; z0 /= l; z1 /= l; z2 /= l;
+    let x0 = up[1] * z2 - up[2] * z1, x1 = up[2] * z0 - up[0] * z2, x2 = up[0] * z1 - up[1] * z0; l = Math.hypot(x0, x1, x2) || 1; x0 /= l; x1 /= l; x2 /= l;
+    const y0 = z1 * x2 - z2 * x1, y1 = z2 * x0 - z0 * x2, y2 = z0 * x1 - z1 * x0;
+    return new Float32Array([x0, y0, z0, 0, x1, y1, z1, 0, x2, y2, z2, 0, -(x0 * e[0] + x1 * e[1] + x2 * e[2]), -(y0 * e[0] + y1 * e[1] + y2 * e[2]), -(z0 * e[0] + z1 * e[1] + z2 * e[2]), 1]);
+  },
+  compose(p, r, s, o) {
+    o = o || new Float32Array(16);
+    const cx = Math.cos(r[0]), sx = Math.sin(r[0]), cy = Math.cos(r[1]), sy = Math.sin(r[1]), cz = Math.cos(r[2]), sz = Math.sin(r[2]);
+    // R = Ry * Rx * Rz
+    const r00 = cy * cz + sy * sx * sz, r01 = -cy * sz + sy * sx * cz, r02 = sy * cx;
+    const r10 = cx * sz, r11 = cx * cz, r12 = -sx;
+    const r20 = -sy * cz + cy * sx * sz, r21 = sy * sz + cy * sx * cz, r22 = cy * cx;
+    o[0] = r00 * s[0]; o[1] = r10 * s[0]; o[2] = r20 * s[0]; o[3] = 0;
+    o[4] = r01 * s[1]; o[5] = r11 * s[1]; o[6] = r21 * s[1]; o[7] = 0;
+    o[8] = r02 * s[2]; o[9] = r12 * s[2]; o[10] = r22 * s[2]; o[11] = 0;
+    o[12] = p[0]; o[13] = p[1]; o[14] = p[2]; o[15] = 1; return o;
+  },
+  inv(a) {
+    const o = new Float32Array(16);
+    const a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3], a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7], a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11], a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    const b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10, b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12, b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30, b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32;
+    let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06; if (!det) return null; det = 1 / det;
+    o[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det; o[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det; o[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det; o[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    o[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det; o[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det; o[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det; o[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    o[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det; o[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det; o[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det; o[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    o[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det; o[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det; o[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det; o[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+    return o;
+  },
+  pt(m, p) { const x = p[0], y = p[1], z = p[2]; const w = m[3] * x + m[7] * y + m[11] * z + m[15]; return [(m[0] * x + m[4] * y + m[8] * z + m[12]) / w, (m[1] * x + m[5] * y + m[9] * z + m[13]) / w, (m[2] * x + m[6] * y + m[10] * z + m[14]) / w]; },
+  dir(m, d) { return [m[0] * d[0] + m[4] * d[1] + m[8] * d[2], m[1] * d[0] + m[5] * d[1] + m[9] * d[2], m[2] * d[0] + m[6] * d[1] + m[10] * d[2]]; },
+};
+const V3 = {
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+  sc: (a, s) => [a[0] * s, a[1] * s, a[2] * s], dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  len: (a) => Math.hypot(a[0], a[1], a[2]), norm: (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+  lerp: (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t],
+};
+function hex(h) { h = h.replace('#', ''); return [parseInt(h.slice(0, 2), 16) / 255, parseInt(h.slice(2, 4), 16) / 255, parseInt(h.slice(4, 6), 16) / 255]; }
+function mixc(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const ease = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+// ---------- geometry ----------
+class Geo {
+  constructor() { this.p = []; this.n = []; }
+  tri(a, b, c, na, nb, nc) { this.p.push(...a, ...b, ...c); this.n.push(...na, ...(nb || na), ...(nc || na)); return this; }
+  quad(a, b, c, d, n) { this.tri(a, b, c, n); this.tri(a, c, d, n); return this; }
+  ftri(a, b, c, ctr) { let n = V3.norm(V3.cross(V3.sub(b, a), V3.sub(c, a))); const m = V3.sc(V3.add(V3.add(a, b), c), 1 / 3); if (V3.dot(n, V3.sub(m, ctr)) < 0) n = V3.sc(n, -1); return this.tri(a, b, c, n); }
+  fquad(a, b, c, d, ctr) { this.ftri(a, b, c, ctr); this.ftri(a, c, d, ctr); return this; }
+  bounds() { const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9]; for (let i = 0; i < this.p.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], this.p[i + k]); mx[k] = Math.max(mx[k], this.p[i + k]); } return [mn, mx]; }
+}
+const G = {
+  box(w, h, d) {
+    const x = w / 2, y = h / 2, z = d / 2, g = new Geo();
+    g.quad([-x, -y, z], [x, -y, z], [x, y, z], [-x, y, z], [0, 0, 1]);
+    g.quad([x, -y, -z], [-x, -y, -z], [-x, y, -z], [x, y, -z], [0, 0, -1]);
+    g.quad([x, -y, z], [x, -y, -z], [x, y, -z], [x, y, z], [1, 0, 0]);
+    g.quad([-x, -y, -z], [-x, -y, z], [-x, y, z], [-x, y, -z], [-1, 0, 0]);
+    g.quad([-x, y, z], [x, y, z], [x, y, -z], [-x, y, -z], [0, 1, 0]);
+    g.quad([-x, -y, -z], [x, -y, -z], [x, -y, z], [-x, -y, z], [0, -1, 0]);
+    return g;
+  },
+  cyl(r1, r2, h, seg = 16, caps = true) {
+    const g = new Geo(), y0 = -h / 2, y1 = h / 2, sl = (r1 - r2) / h;
+    for (let i = 0; i < seg; i++) {
+      const a0 = i / seg * Math.PI * 2, a1 = (i + 1) / seg * Math.PI * 2;
+      const c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+      const n0 = V3.norm([c0, sl, s0]), n1 = V3.norm([c1, sl, s1]);
+      const b0 = [r1 * c0, y0, r1 * s0], b1 = [r1 * c1, y0, r1 * s1], t0 = [r2 * c0, y1, r2 * s0], t1 = [r2 * c1, y1, r2 * s1];
+      g.tri(b0, t0, t1, n0, n0, n1); g.tri(b0, t1, b1, n0, n1, n1);
+      if (caps) { if (r2 > 0) g.tri([0, y1, 0], t1, t0, [0, 1, 0]); if (r1 > 0) g.tri([0, y0, 0], b0, b1, [0, -1, 0]); }
+    }
+    return g;
+  },
+  sphere(r, seg = 12, half = false) {
+    const g = new Geo(), rows = half ? seg / 2 : seg;
+    const P = (i, j) => { const th = i / seg * Math.PI, ph = j / seg * Math.PI * 2; return [Math.sin(th) * Math.cos(ph), Math.cos(th), Math.sin(th) * Math.sin(ph)]; };
+    for (let i = 0; i < rows; i++) for (let j = 0; j < seg; j++) {
+      const a = P(i, j), b = P(i + 1, j), c = P(i + 1, j + 1), d = P(i, j + 1);
+      g.tri(V3.sc(a, r), V3.sc(b, r), V3.sc(c, r), a, b, c); g.tri(V3.sc(a, r), V3.sc(c, r), V3.sc(d, r), a, c, d);
+    }
+    return g;
+  },
+  torus(R, r, su = 20, sv = 8) {
+    const g = new Geo();
+    const P = (u, v) => { const a = u / su * Math.PI * 2, b = v / sv * Math.PI * 2; const cx = Math.cos(a) * R, cz = Math.sin(a) * R; const n = [Math.cos(b) * Math.cos(a), Math.sin(b), Math.cos(b) * Math.sin(a)]; return [[cx + n[0] * r, n[1] * r, cz + n[2] * r], n]; };
+    for (let i = 0; i < su; i++) for (let j = 0; j < sv; j++) { const [a, na] = P(i, j), [b, nb] = P(i + 1, j), [c, nc] = P(i + 1, j + 1), [d, nd] = P(i, j + 1); g.tri(a, b, c, na, nb, nc); g.tri(a, c, d, na, nc, nd); }
+    return g;
+  },
+  frustum(w, d, w2, d2, h, oz = 0) {
+    const g = new Geo(), y0 = -h / 2, y1 = h / 2, c = [0, 0, 0];
+    const b = [[-w / 2, y0, -d / 2], [w / 2, y0, -d / 2], [w / 2, y0, d / 2], [-w / 2, y0, d / 2]];
+    const t = [[-w2 / 2, y1, -d2 / 2 + oz], [w2 / 2, y1, -d2 / 2 + oz], [w2 / 2, y1, d2 / 2 + oz], [-w2 / 2, y1, d2 / 2 + oz]];
+    for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; g.fquad(b[i], b[j], t[j], t[i], c); }
+    g.fquad(t[0], t[1], t[2], t[3], c); g.fquad(b[0], b[1], b[2], b[3], c);
+    return g;
+  },
+  prism(w, h, d) { // gable roof, ridge along x
+    const g = new Geo(), x = w / 2, z = d / 2, c = [0, h / 3, 0];
+    const A = [-x, 0, -z], B = [x, 0, -z], C = [x, 0, z], D = [-x, 0, z], E = [-x, h, 0], F = [x, h, 0];
+    g.fquad(A, B, F, E, c); g.fquad(D, C, F, E, c); g.ftri(A, D, E, c); g.ftri(B, C, F, c); g.fquad(A, B, C, D, c);
+    return g;
+  },
+  plane(w, d) { const g = new Geo(), x = w / 2, z = d / 2; g.quad([-x, 0, z], [x, 0, z], [x, 0, -z], [-x, 0, -z], [0, 1, 0]); return g; },
+  disc(r, seg = 32) { const g = new Geo(); for (let i = 0; i < seg; i++) { const a0 = i / seg * 6.2832, a1 = (i + 1) / seg * 6.2832; g.tri([0, 0, 0], [Math.cos(a1) * r, 0, Math.sin(a1) * r], [Math.cos(a0) * r, 0, Math.sin(a0) * r], [0, 1, 0]); } return g; },
+  ring(r1, r2, seg = 48) { const g = new Geo(); for (let i = 0; i < seg; i++) { const a0 = i / seg * 6.2832, a1 = (i + 1) / seg * 6.2832; const p = (r, a) => [Math.cos(a) * r, 0, Math.sin(a) * r]; g.quad(p(r1, a0), p(r2, a0), p(r2, a1), p(r1, a1), [0, 1, 0]); } return g; },
+  tube(pts, r, rs = 8) {
+    const g = new Geo(), rings = [];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+      const T = V3.norm(V3.sub(b, a)); let ref = Math.abs(T[1]) > 0.95 ? [1, 0, 0] : [0, 1, 0];
+      const B = V3.norm(V3.cross(T, ref)), N = V3.cross(B, T);
+      const ring = []; for (let k = 0; k <= rs; k++) { const th = k / rs * Math.PI * 2; const n = V3.add(V3.sc(N, Math.cos(th)), V3.sc(B, Math.sin(th))); ring.push([V3.add(pts[i], V3.sc(n, r)), n]); }
+      rings.push(ring);
+    }
+    for (let i = 0; i < rings.length - 1; i++) for (let k = 0; k < rs; k++) {
+      const [a, na] = rings[i][k], [b, nb] = rings[i + 1][k], [c, nc] = rings[i + 1][k + 1], [d, nd] = rings[i][k + 1];
+      g.tri(a, b, c, na, nb, nc); g.tri(a, c, d, na, nc, nd);
+    }
+    return g;
+  },
+};
+
+// ---------- renderer ----------
+const R = {
+  init(canvas) {
+    this.cv = canvas;
+    const gl = canvas.getContext('webgl', { antialias: true, alpha: false, preserveDrawingBuffer: true }) || canvas.getContext('experimental-webgl');
+    if (!gl) throw new Error('WebGL not available');
+    this.gl = gl;
+    const vs = `attribute vec3 aP;attribute vec3 aN;attribute vec3 aC;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uCol;varying vec3 vN;varying vec3 vC;varying vec3 vW;
+      void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=mat3(uM)*aN;vC=aC*uCol;gl_Position=uVP*w;}`;
+    const fs = `precision mediump float;varying vec3 vN;varying vec3 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec3 uEye;uniform float uA;uniform vec3 uEm;uniform float uLit;
+      void main(){vec3 n=normalize(vN);float h=n.y*.5+.5;vec3 amb=mix(uGnd,uSky,h);float d=max(dot(n,uSun),0.);vec3 lit=vC*(amb+uSunC*d);
+      vec3 c=mix(vC,lit,uLit)+uEm;float dist=length(vW-uEye);float f=1.-exp(-dist*dist*uFogD*uFogD);c=mix(c,uFog,clamp(f,0.,1.));gl_FragColor=vec4(c,uA);}`;
+    this.prog = this.mk(vs, fs);
+    const p = this.prog; gl.useProgram(p);
+    this.a = { P: gl.getAttribLocation(p, 'aP'), N: gl.getAttribLocation(p, 'aN'), C: gl.getAttribLocation(p, 'aC') };
+    this.u = {}; ['uVP', 'uM', 'uCol', 'uSun', 'uSunC', 'uSky', 'uGnd', 'uFog', 'uFogD', 'uEye', 'uA', 'uEm', 'uLit'].forEach((k) => { this.u[k] = gl.getUniformLocation(p, k); });
+    const pvs = `attribute vec3 aP;attribute vec4 aC;attribute float aS;uniform mat4 uVP;uniform float uScale;varying vec4 vC;void main(){gl_Position=uVP*vec4(aP,1.);gl_PointSize=clamp(aS*uScale/gl_Position.w,1.,256.);vC=aC;}`;
+    const pfs = `precision mediump float;varying vec4 vC;void main(){vec2 d=gl_PointCoord-.5;float a=smoothstep(.5,.15,length(d));gl_FragColor=vec4(vC.rgb,vC.a*a);}`;
+    this.pprog = this.mk(pvs, pfs);
+    this.pa = { P: gl.getAttribLocation(this.pprog, 'aP'), C: gl.getAttribLocation(this.pprog, 'aC'), S: gl.getAttribLocation(this.pprog, 'aS') };
+    this.pu = { VP: gl.getUniformLocation(this.pprog, 'uVP'), Scale: gl.getUniformLocation(this.pprog, 'uScale') };
+    this.pbuf = gl.createBuffer();
+    gl.enable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  },
+  mk(vs, fs) {
+    const gl = this.gl, sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+    const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p;
+  },
+  mesh(geo, colors) {
+    const gl = this.gl, m = { count: geo.p.length / 3, id: (this._mid = (this._mid || 0) + 1) };
+    m.vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geo.p), gl.STATIC_DRAW);
+    m.nb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.nb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geo.n), gl.STATIC_DRAW);
+    if (colors) { m.cb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW); }
+    m.bounds = geo.bounds();
+    return m;
+  },
+  free(m) { if (!m) return; const gl = this.gl; gl.deleteBuffer(m.vb); gl.deleteBuffer(m.nb); if (m.cb) gl.deleteBuffer(m.cb); },
+};
+// batch of static geometry with baked transforms + vertex colours
+class Batch {
+  constructor() { this.g = new Geo(); this.c = []; }
+  add(geo, pos = [0, 0, 0], rot = [0, 0, 0], col = '#ffffff', scl = [1, 1, 1]) {
+    const m = M4.compose(pos, rot, scl), c = typeof col === 'string' ? hex(col) : col;
+    for (let i = 0; i < geo.p.length; i += 3) {
+      const p = M4.pt(m, [geo.p[i], geo.p[i + 1], geo.p[i + 2]]); this.g.p.push(p[0], p[1], p[2]);
+      const n = V3.norm(M4.dir(m, [geo.n[i] / scl[0], geo.n[i + 1] / scl[1], geo.n[i + 2] / scl[2]])); this.g.n.push(n[0], n[1], n[2]);
+      this.c.push(c[0], c[1], c[2]);
+    }
+    return this;
+  }
+  mesh() { return R.mesh(this.g, this.c); }
+}
+const MESH = {};
+function mesh(key, fn) { if (!MESH[key]) MESH[key] = R.mesh(fn()); return MESH[key]; }
+
+// ---------- scene graph ----------
+class Node {
+  constructor(o = {}) { this.pos = [0, 0, 0]; this.rot = [0, 0, 0]; this.scl = [1, 1, 1]; this.children = []; this.mesh = null; this.col = [1, 1, 1]; this.alpha = 1; this.em = [0, 0, 0]; this.lit = 1; this.visible = true; this.world = M4.id(); this.local = M4.id(); Object.assign(this, o); if (typeof this.col === 'string') this.col = hex(this.col); }
+  add(c) { c.parent = this; this.children.push(c); return c; }
+  remove(c) { const i = this.children.indexOf(c); if (i >= 0) this.children.splice(i, 1); c.parent = null; }
+  clear() { this.children.length = 0; }
+}
+function N(meshObj, col, pos, o = {}) { return new Node(Object.assign({ mesh: meshObj, col: col || '#ffffff', pos: pos || [0, 0, 0] }, o)); }
+
+// ---------- camera ----------
+const CAM = { target: [0, 0, 0], yaw: 0.6, pitch: 0.7, dist: 200, fov: 0.75, eye: [0, 0, 0], vp: M4.id(), ivp: M4.id(), w: 1, h: 1, follow: null, minD: 5, maxD: 900, minP: 0.12, maxP: 1.52 };
+function camUpdate() {
+  if (CAM.follow) { const f = CAM.follow(); if (f) CAM.target = V3.lerp(CAM.target, f, CAM.followK || 1); }
+  const cp = Math.cos(CAM.pitch);
+  CAM.eye = [CAM.target[0] + CAM.dist * cp * Math.sin(CAM.yaw), CAM.target[1] + CAM.dist * Math.sin(CAM.pitch), CAM.target[2] + CAM.dist * cp * Math.cos(CAM.yaw)];
+  const view = M4.lookAt(CAM.eye, CAM.target, [0, 1, 0]);
+  const proj = M4.persp(CAM.fov, CAM.w / CAM.h, Math.max(0.05, CAM.dist * 0.01), CAM.dist * 8 + 1500);
+  CAM.vp = M4.mul(proj, view); CAM.ivp = M4.inv(CAM.vp);
+}
+function project(p) { const m = CAM.vp, x = p[0], y = p[1], z = p[2]; const w = m[3] * x + m[7] * y + m[11] * z + m[15]; if (w <= 0.01) return null; return [((m[0] * x + m[4] * y + m[8] * z + m[12]) / w * 0.5 + 0.5) * CAM.w, (1 - ((m[1] * x + m[5] * y + m[9] * z + m[13]) / w * 0.5 + 0.5)) * CAM.h, w]; }
+function rayAt(mx, my) { const x = mx / CAM.w * 2 - 1, y = 1 - my / CAM.h * 2; const a = M4.pt(CAM.ivp, [x, y, -1]), b = M4.pt(CAM.ivp, [x, y, 1]); return { o: a, d: V3.norm(V3.sub(b, a)) }; }
+function rayBox(ray, node, c, h) { // c center, h half extents in node local space
+  const inv = M4.inv(node.world); if (!inv) return null;
+  const o = M4.pt(inv, ray.o), d = M4.dir(inv, ray.d);
+  let t0 = -1e9, t1 = 1e9;
+  for (let k = 0; k < 3; k++) {
+    const lo = c[k] - h[k], hi = c[k] + h[k];
+    if (Math.abs(d[k]) < 1e-9) { if (o[k] < lo || o[k] > hi) return null; continue; }
+    let a = (lo - o[k]) / d[k], b = (hi - o[k]) / d[k]; if (a > b) [a, b] = [b, a];
+    t0 = Math.max(t0, a); t1 = Math.min(t1, b); if (t0 > t1) return null;
+  }
+  return t1 < 0 ? null : Math.max(t0, 0);
+}
+let _tweens = [];
+function animate(dur, fn, ez = ease) { return new Promise((res) => { _tweens.push({ t: 0, dur, fn, ez, res }); }); }
+function tickTweens(dt) { const keep = []; for (const tw of _tweens) { tw.t += dt; const k = Math.min(1, tw.t / tw.dur); tw.fn(tw.ez(k), k); if (k < 1) keep.push(tw); else tw.res(); } _tweens = keep; }
+function camTo(to, dur = 1.6) {
+  const from = { target: CAM.target.slice(), yaw: CAM.yaw, pitch: CAM.pitch, dist: CAM.dist, fov: CAM.fov };
+  let dy = (to.yaw !== undefined ? to.yaw : from.yaw) - from.yaw; while (dy > Math.PI) dy -= Math.PI * 2; while (dy < -Math.PI) dy += Math.PI * 2;
+  CAM._tw = (CAM._tw || 0) + 1; const id = CAM._tw;
+  return animate(dur, (k) => {
+    if (CAM._tw !== id) return;
+    if (to.target) CAM.target = V3.lerp(from.target, typeof to.target === 'function' ? to.target() : to.target, k);
+    CAM.yaw = from.yaw + dy * k;
+    if (to.pitch !== undefined) CAM.pitch = from.pitch + (to.pitch - from.pitch) * k;
+    if (to.dist !== undefined) CAM.dist = Math.exp(Math.log(from.dist) + (Math.log(to.dist) - Math.log(from.dist)) * k);
+    if (to.fov !== undefined) CAM.fov = from.fov + (to.fov - from.fov) * k;
+  });
+}
+
+// ---------- draw ----------
+const THEMES = {
+  night: { bg: '#0b1222', fog: '#0b1222', fogD: 0.0014, sky: '#6580b0', gnd: '#2a3244', sun: '#ffe6c4', sunI: 1.05, ground: '#182035', pad: '#212c47', road: '#2a3245', mark: '#6b7894', water: '#12345a', grass: '#14251f', glow: 1 },
+  day: { bg: '#dfe7f1', fog: '#dfe7f1', fogD: 0.0012, sky: '#c9d8ee', gnd: '#8d8676', sun: '#fff6e8', sunI: 0.75, ground: '#c5ccd4', pad: '#b7bfc9', road: '#6f7785', mark: '#e6e9ee', water: '#7fb2dc', grass: '#a8c19a', glow: 0.35 },
+};
+let TH = THEMES.night;
+function collect(node, parentW, opaque, trans) {
+  if (!node.visible) return;
+  M4.compose(node.pos, node.rot, node.scl, node.local);
+  if (parentW) M4.mul(parentW, node.local, node.world); else node.world.set(node.local);
+  if (node.mesh && node.alpha > 0.003) (node.alpha < 0.999 || node.trans ? trans : opaque).push(node);
+  for (const c of node.children) collect(c, node.world, opaque, trans);
+}
+function drawList(list) {
+  const gl = R.gl, u = R.u, a = R.a; let last = null;
+  for (const n of list) {
+    const m = n.mesh;
+    if (m !== last) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.vertexAttribPointer(a.P, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(a.P);
+      gl.bindBuffer(gl.ARRAY_BUFFER, m.nb); gl.vertexAttribPointer(a.N, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(a.N);
+      if (m.cb) { gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.vertexAttribPointer(a.C, 3, gl.FLOAT, false, 0, 0); gl.enableVertexAttribArray(a.C); }
+      else { gl.disableVertexAttribArray(a.C); gl.vertexAttrib3f(a.C, 1, 1, 1); }
+      last = m;
+    }
+    gl.uniformMatrix4fv(u.uM, false, n.world); gl.uniform3fv(u.uCol, n.col); gl.uniform1f(u.uA, n.alpha);
+    gl.uniform3fv(u.uEm, n.em); gl.uniform1f(u.uLit, n.lit);
+    if (n.add) gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.drawArrays(gl.TRIANGLES, 0, m.count);
+    if (n.add) gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  }
+}
+const PARTS = { list: [], max: 900 };
+function emit(p, o) { if (PARTS.list.length >= PARTS.max) return; PARTS.list.push(Object.assign({ p: p.slice(), v: [0, 2, 0], life: 0, max: 4, s0: 3, s1: 10, c: [1, 1, 1], a0: 0.35, a1: 0, g: 0 }, o)); }
+function stepParts(dt) {
+  const keep = [];
+  for (const q of PARTS.list) { q.life += dt; if (q.life >= q.max) continue; q.p[0] += q.v[0] * dt; q.p[1] += q.v[1] * dt; q.p[2] += q.v[2] * dt; q.v[1] += q.g * dt; keep.push(q); }
+  PARTS.list = keep;
+}
+let _pdata = new Float32Array(PARTS.max * 8);
+function drawParts() {
+  const gl = R.gl, n = PARTS.list.length; if (!n) return;
+  for (let i = 0; i < n; i++) { const q = PARTS.list[i], k = q.life / q.max; const o = i * 8; _pdata[o] = q.p[0]; _pdata[o + 1] = q.p[1]; _pdata[o + 2] = q.p[2]; _pdata[o + 3] = q.s0 + (q.s1 - q.s0) * k; _pdata[o + 4] = q.c[0]; _pdata[o + 5] = q.c[1]; _pdata[o + 6] = q.c[2]; _pdata[o + 7] = (q.a0 + (q.a1 - q.a0) * k) * Math.min(1, q.life * 4); }
+  gl.useProgram(R.pprog);
+  gl.uniformMatrix4fv(R.pu.VP, false, CAM.vp); gl.uniform1f(R.pu.Scale, CAM.h * 0.9);
+  gl.bindBuffer(gl.ARRAY_BUFFER, R.pbuf); gl.bufferData(gl.ARRAY_BUFFER, _pdata.subarray(0, n * 8), gl.DYNAMIC_DRAW);
+  gl.vertexAttribPointer(R.pa.P, 3, gl.FLOAT, false, 32, 0); gl.enableVertexAttribArray(R.pa.P);
+  gl.vertexAttribPointer(R.pa.S, 1, gl.FLOAT, false, 32, 12); gl.enableVertexAttribArray(R.pa.S);
+  gl.vertexAttribPointer(R.pa.C, 4, gl.FLOAT, false, 32, 16); gl.enableVertexAttribArray(R.pa.C);
+  gl.depthMask(false); gl.enable(gl.BLEND);
+  gl.drawArrays(gl.POINTS, 0, n);
+  gl.disableVertexAttribArray(R.pa.S); gl.disableVertexAttribArray(R.pa.C);
+  gl.depthMask(true); gl.useProgram(R.prog);
+}
+function render(root, fogMul = 1) {
+  const gl = R.gl, u = R.u;
+  const bg = hex(TH.bg); gl.clearColor(bg[0], bg[1], bg[2], 1); gl.depthMask(true); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.useProgram(R.prog);
+  gl.uniformMatrix4fv(u.uVP, false, CAM.vp);
+  const sd = V3.norm([0.45, 0.8, 0.35]); gl.uniform3fv(u.uSun, sd);
+  gl.uniform3fv(u.uSunC, V3.sc(hex(TH.sun), TH.sunI)); gl.uniform3fv(u.uSky, hex(TH.sky)); gl.uniform3fv(u.uGnd, hex(TH.gnd));
+  gl.uniform3fv(u.uFog, hex(TH.fog)); gl.uniform1f(u.uFogD, TH.fogD * fogMul); gl.uniform3fv(u.uEye, CAM.eye);
+  const opaque = [], trans = [];
+  collect(root, null, opaque, trans);
+  opaque.sort((x, y) => x.mesh.id - y.mesh.id);
+  gl.disable(gl.BLEND); gl.depthMask(true); drawList(opaque);
+  for (const n of trans) { const w = n.world; n._d = (w[12] - CAM.eye[0]) ** 2 + (w[13] - CAM.eye[1]) ** 2 + (w[14] - CAM.eye[2]) ** 2; }
+  trans.sort((x, y) => (y._order || 0) - (x._order || 0) || y._d - x._d);
+  gl.enable(gl.BLEND); gl.depthMask(false); drawList(trans); gl.depthMask(true);
+  drawParts();
+}
+
+// ---------- labels ----------
+const LABELS = { root: null, list: [] };
+function label(html, pos, cls = '', o = {}) {
+  const el = document.createElement('div'); el.className = 'lbl ' + cls; el.innerHTML = html; LABELS.root.appendChild(el);
+  const L = Object.assign({ el, pos, dy: 0, show: true, scene: null }, o); LABELS.list.push(L); return L;
+}
+function clearLabels(scene) { LABELS.list = LABELS.list.filter((L) => { if (!scene || L.scene === scene) { L.el.remove(); return false; } return true; }); }
+function updateLabels(cur) {
+  for (const L of LABELS.list) {
+    const vis = L.show && (!L.scene || L.scene === cur);
+    if (!vis) { if (L._v !== false) { L.el.style.display = 'none'; L._v = false; } continue; }
+    const p = project(typeof L.pos === 'function' ? L.pos() : L.pos);
+    if (!p || p[0] < -200 || p[0] > CAM.w + 200 || p[1] < -100 || p[1] > CAM.h + 100) { if (L._v !== false) { L.el.style.display = 'none'; L._v = false; } continue; }
+    if (L._v !== true) { L.el.style.display = ''; L._v = true; }
+    L.el.style.transform = `translate(${p[0].toFixed(1)}px,${(p[1] + L.dy).toFixed(1)}px)`;
+    if (L.fade) { const o = clamp(1 - (p[2] - L.fade[0]) / (L.fade[1] - L.fade[0]), 0, 1); L.el.style.opacity = o.toFixed(2); }
+  }
+}
+
+// ================= SCENE 1: PLANT =================
+const BOXCOLS = ['#b4412f', '#2f5d8a', '#3f7d4e', '#8a8f98', '#c27c2c', '#6b4f8a', '#a83c5a', '#2f7f86', '#d1b13a', '#596273'];
+function chaikin(pts, it = 3) {
+  for (let k = 0; k < it; k++) {
+    const o = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1]; o.push([a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25], [a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75]); }
+    o.push(pts[pts.length - 1]); pts = o;
+  }
+  return pts;
+}
+function mkPath(raw, stops = {}) {
+  const pts = chaikin(raw.map((p) => [p[0], p[1]]));
+  const s = [0]; for (let i = 1; i < pts.length; i++) s.push(s[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const P = { pts, s, len: s[s.length - 1], stops: {} };
+  for (const k in stops) { const q = stops[k]; let bi = 0, bd = 1e9; pts.forEach((p, i) => { const d = Math.hypot(p[0] - q[0], p[1] - q[1]); if (d < bd) { bd = d; bi = i; } }); P.stops[k] = s[bi]; }
+  return P;
+}
+function pathAt(P, d) {
+  d = clamp(d, 0, P.len); let lo = 0, hi = P.s.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P.s[m] <= d) lo = m; else hi = m; }
+  const a = P.pts[lo], b = P.pts[hi], k = (d - P.s[lo]) / ((P.s[hi] - P.s[lo]) || 1);
+  return { x: a[0] + (b[0] - a[0]) * k, z: a[1] + (b[1] - a[1]) * k, dx: b[0] - a[0], dz: b[1] - a[1] };
+}
+
+const Plant = {
+  root: new Node(), name: 'plant', trucks: [], facs: [], clock: 0, simMin: 10 * 60 + 42, feed: [],
+  init() {
+    const bays = [84, 98, 112, 126];
+    this.bays = bays;
+    this.paths = {};
+    bays.forEach((bx) => {
+      this.paths['inW' + bx] = mkPath([[-620, 97], [44, 97], [56, 91], [56, 89], [56, 64], [62, 50], [bx, 50]], { gate: [56, 89.5] });
+      this.paths['inE' + bx] = mkPath([[620, 103], [70, 103], [58, 97], [56, 89], [56, 64], [62, 50], [bx, 50]], { gate: [56, 89.5] });
+      this.paths['outE' + bx] = mkPath([[bx, 45], [70, 45], [64, 52], [64, 80], [64, 94], [72, 97], [620, 97]], { gate: [64, 80.5] });
+      this.paths['outW' + bx] = mkPath([[bx, 45], [70, 45], [64, 52], [64, 80], [64, 99], [56, 103], [-620, 103]], { gate: [64, 80.5] });
+    });
+    this.buildStatic();
+    this.buildDynamic();
+    this.feat = featured();
+    // place featured trucks
+    const f = this.feat;
+    this.spawn(f[0], 'inW112', { s: 0.86, feat: 1 });
+    this.spawn(f[1], 'outE84', { s: 0.02, feat: 2, delay: 9 });
+    this.spawn(f[2], 'inE126', { s: 0.62, feat: 3 });
+    this.spawn(f[3], 'inW98', { s: 0.55, feat: 4 });
+    for (let i = 0; i < 8; i++) this.spawnRandom(rnd() * 0.85);
+    this.nextSpawn = 2;
+    this.trainCycle(true);
+  },
+  // ---------- static world ----------
+  buildStatic() {
+    if (this.staticNode) { this.root.remove(this.staticNode); this.staticNode.children.forEach((c) => R.free(c.mesh)); }
+    const B = new Batch(), GW = new Batch(), T = TH;
+    const bx = (x, z, w, d, h, col, y0 = 0, ry = 0) => B.add(G.box(w, h, d), [x, y0 + h / 2, z], [0, ry, 0], col);
+    const cy = (x, z, r1, r2, h, col, y0 = 0, seg = 18) => B.add(G.cyl(r1, r2, h, seg), [x, y0 + h / 2, z], [0, 0, 0], col);
+    B.add(G.plane(2400, 2400), [0, -0.06, 0], [0, 0, 0], T.ground);
+    // fields
+    for (let i = 0; i < 26; i++) { const x = -700 + (i % 13) * 110, z = i < 13 ? 175 : -330; B.add(G.plane(96, 60 + (i % 3) * 14), [x, -0.04, z], [0, 0, 0], mixc(hex(T.grass), hex(T.ground), (i % 4) * 0.18)); }
+    B.add(G.plane(430, 250), [0, 0, -32], [0, 0, 0], T.pad);
+    B.add(G.plane(2400, 40), [0, 0.02, -215], [0, 0, 0], T.water);
+    B.add(G.plane(2400, 4), [0, 0.03, -193], [0, 0, 0], mixc(hex(T.water), hex(T.ground), 0.5));
+    // fence
+    const fc = mixc(hex(T.mark), hex(T.pad), 0.55);
+    bx(0, -157, 430, 0.4, 1.6, fc); bx(-215, -32, 0.4, 250, 1.6, fc); bx(215, -32, 0.4, 250, 1.6, fc);
+    bx(-80, 93, 270, 0.4, 1.6, fc); bx(142, 93, 146, 0.4, 1.6, fc);
+    // roads
+    const rd = T.road;
+    B.add(G.box(2400, 0.08, 15), [0, 0.04, 100], [0, 0, 0], rd);
+    for (let x = -1180; x < 1180; x += 9) B.add(G.box(4.5, 0.1, 0.35), [x, 0.07, 100], [0, 0, 0], T.mark);
+    B.add(G.box(16, 0.08, 46), [60, 0.04, 71], [0, 0, 0], rd);
+    B.add(G.box(95, 0.08, 14), [96, 0.04, 48], [0, 0, 0], rd);
+    B.add(G.box(430, 0.07, 10), [0, 0.035, -8], [0, 0, 0], rd);
+    B.add(G.box(10, 0.07, 150), [-52, 0.035, -82], [0, 0, 0], rd);
+    B.add(G.box(10, 0.07, 150), [140, 0.035, -82], [0, 0, 0], rd);
+    B.add(G.box(0.4, 0.1, 30), [60, 0.08, 72], [0, 0, 0], T.mark);
+    // weighbridges
+    B.add(G.box(4, 0.2, 11), [56, 0.1, 76], [0, 0, 0], '#7c8796'); B.add(G.box(4, 0.2, 11), [64, 0.1, 66], [0, 0, 0], '#7c8796');
+    // gate canopy
+    bx(60, 85, 28, 13, 1, '#cbd5e1', 7); [[47, 79.5], [73, 79.5], [47, 90.5], [73, 90.5]].forEach((p) => bx(p[0], p[1], 0.9, 0.9, 7, '#94a3b8'));
+    bx(60, 85, 3, 6, 3, '#e2e8f0'); bx(60, 85, 3.2, 6.2, 0.3, '#3b82f6', 3);
+    // TRACE hub
+    bx(30, 66, 14, 11, 6, '#334155'); bx(30, 66, 14.2, 11.2, 0.5, '#0ea5e9', 6); B.add(G.sphere(2.2, 12, true), [33, 6.4, 64], [0, 0, 0], '#e2e8f0'); bx(27, 64, 0.3, 0.3, 6, '#cbd5e1', 6.5);
+    // admin
+    bx(5, 70, 18, 10, 9, '#475569'); bx(-18, 72, 12, 9, 6, '#3f4b5f');
+    // rail
+    for (const z of [118, 126]) {
+      B.add(G.box(2400, 0.35, 5.5), [0, 0.17, z], [0, 0, 0], '#3a3f4b');
+      for (const o of [-0.75, 0.75]) B.add(G.box(2400, 0.22, 0.22), [0, 0.46, z + o], [0, 0, 0], '#9aa4b2');
+      for (let x = -560; x < 560; x += 2.6) B.add(G.box(0.5, 0.12, 3.2), [x, 0.36, z], [0, 0, 0], '#4b4036');
+    }
+    for (let x = -540; x < 560; x += 36) { bx(x, 114.5, 0.35, 0.35, 8, '#7b8494'); bx(x, 116.5, 0.3, 4.5, 0.25, '#7b8494', 7.8); }
+    B.add(G.box(2400, 0.08, 0.08), [0, 7.1, 118], [0, 0, 0], '#9aa4b2');
+    // container yard stacks
+    let k = 0;
+    for (const z of [10, 17, 24, 31, 38]) for (let i = 0; i < 14; i++) {
+      const x = 74 + i * 4.7; const tiers = 1 + Math.floor((Math.sin(i * 12.9898 + z * 78.233) * 43758.5453 % 1 + 1) % 1 * 4);
+      for (let t = 0; t < tiers; t++) { const c = BOXCOLS[(k++ * 7) % BOXCOLS.length]; B.add(G.box(4.1, 1.75, 2.0), [x, 0.9 + t * 1.8, z], [0, 0, 0], c); B.add(G.box(0.08, 1.6, 1.85), [x - 2.07, 0.9 + t * 1.8, z], [0, 0, 0], mixc(hex(c), [0, 0, 0], 0.35)); }
+    }
+    // RTG crane
+    const rc = '#f59e0b';
+    for (const x of [103, 109]) { for (const z of [4, 54]) bx(x, z, 1, 1, 14, rc); B.add(G.box(1, 1.3, 51), [x, 14.4, 29], [0, 0, 0], rc); }
+    for (const z of [4, 54]) bx(106, z, 7, 1.2, 1.2, rc, 13.6);
+    bx(106, 48, 5, 3, 1.8, '#fbbf24', 12.4); bx(106, 48, 4.4, 2.2, 0.4, '#475569', 6.5); for (const o of [-1.5, 1.5]) bx(106 + o, 48, 0.08, 0.08, 6, '#94a3b8', 6.8);
+    // stockyard piles
+    const piles = [[-165, 30, '#1f2124'], [-100, 30, '#7a3b25'], [-165, 50, '#b9b4a6'], [-100, 50, '#a8987a'], [-165, 70, '#26272b'], [-100, 70, '#5b4a3f']];
+    piles.forEach((p) => B.add(G.frustum(56, 13, 44, 2.5, 7.5), [p[0], 3.75, p[1]], [0, 0, 0], p[2]));
+    for (const z of [40, 60]) { B.add(G.box(130, 0.2, 2), [-132, 0.1, z], [0, 0, 0], '#4a5260'); bx(-140, z, 5, 5, 3, '#e5b53a', 0.2); B.add(G.box(32, 1, 1.4), [-140, 5.5, z - 8], [0, 0.2, -0.18], '#e5b53a'); }
+    // conveyor
+    B.add(G.box(2.2, 2, 120), [-70, 9, -22], [0, 0, 0], '#8b96a6'); for (let z = 34; z > -82; z -= 14) bx(-70, z, 0.6, 0.6, 8, '#6b7586');
+    B.add(G.box(48, 2, 2.2), [-94, 9, -82], [0, 0, 0], '#8b96a6');
+    // blast furnaces
+    const bf = (x, z) => {
+      cy(x, z, 7.5, 7.5, 14, '#5b5550'); cy(x, z, 7.8, 5.6, 22, '#635c56', 14); cy(x, z, 5.6, 3, 6, '#4b4744', 36); bx(x, z, 6, 6, 9, '#6b7280', 42);
+      cy(x + 3, z + 2, 0.9, 0.9, 16, '#8b8f97', 46); bx(x - 13, z, 16, 12, 10, '#4b5563');
+      for (let i = 0; i < 4; i++) { cy(x + 2, z - 14 - i * 9, 4, 4, 30, '#7c8592'); B.add(G.sphere(4, 14, true), [x + 2, 30, z - 14 - i * 9], [0, 0, 0], '#7c8592'); }
+      cy(x + 2, z - 50, 2, 1.5, 52, '#9aa1ab'); bx(x + 10, z + 8, 6, 6, 14, '#6b6560'); cy(x + 10, z + 8, 4, 4, 10, '#7a726b', 14);
+    };
+    bf(-120, -82); bf(-65, -100);
+    // coke ovens
+    bx(-190, -90, 13, 62, 10, '#3f3a36'); bx(-172, -90, 13, 62, 10, '#3f3a36'); bx(-190, -90, 13.4, 62.4, 0.6, '#5b524c', 10); bx(-172, -90, 13.4, 62.4, 0.6, '#5b524c', 10);
+    bx(-181, -135, 6, 6, 24, '#57534e'); cy(-200, -52, 2.4, 1.7, 50, '#8a8f96'); cy(-162, -52, 2.4, 1.7, 50, '#8a8f96');
+    // steel melt shop
+    bx(-12, -110, 44, 36, 30, '#475569'); B.add(G.prism(44, 7, 36), [-12, 30, -110], [0, 0, 0], '#334155'); cy(14, -126, 2.2, 1.7, 48, '#9aa1ab');
+    bx(-12, -91.8, 40, 0.3, 1, '#ffd08a', 20);
+    // hot strip mill
+    bx(70, -122, 130, 18, 14, '#64748b'); B.add(G.prism(130, 4.5, 18), [70, 14, -122], [0, 0, 0], '#475569'); bx(70, -112.8, 120, 0.3, 0.8, '#ffd08a', 9);
+    // wire rod mill
+    bx(112, -34, 44, 14, 9, '#5b6b7f'); B.add(G.prism(44, 3, 14), [112, 9, -34], [0, 0, 0], '#465569');
+    // CRM + CGL
+    bx(182, -76, 44, 50, 16, '#6b7d93'); B.add(G.prism(44, 4, 50), [182, 16, -76], [0, 0, 0], '#4c5c70'); bx(168, -96, 8, 8, 32, '#7d8ea3'); bx(182, -50.8, 40, 0.3, 0.8, '#ffd08a', 10);
+    // lit windows
+    const win = '#ffd08a';
+    for (const [x, z, w, y] of [[-12, -91.7, 40, 12], [-12, -91.7, 40, 20], [70, -112.8, 120, 4.5], [182, -50.8, 40, 5], [182, -50.8, 40, 11], [182, 11.2, 38, 6], [112, -26.8, 40, 5], [5, 75.1, 16, 3], [5, 75.1, 16, 6], [-18, 76.6, 10, 3]]) GW.add(G.box(w, 0.5, 0.3), [x, y, z], [0, 0, 0], win);
+    for (const [x, z] of [[-12, -91.8], [70, -112.8], [182, -50.8]]) GW.add(G.box(0.01, 0.01, 0.01), [x, 0, z], [0, 0, 0], win);
+    // tubes division
+    bx(182, -2, 42, 26, 10, '#5f7186'); B.add(G.prism(42, 3, 26), [182, 10, -2], [0, 0, 0], '#4a5a6e');
+    // utilities
+    cy(-25, -40, 10, 10, 26, '#6b7280', 0, 24); cy(-25, -40, 10.3, 10.3, 0.6, '#9ca3af', 13, 24);
+    cy(-15, 28, 13, 8.5, 24, '#9ca3af', 0, 26); cy(-15, 28, 8.5, 10, 8, '#a3aab5', 24, 26);
+    // trees
+    let s = 7;
+    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const tree = (x, z) => { const h = 4 + r() * 3; B.add(G.cyl(0.3, 0.3, 2, 6), [x, 1, z], [0, 0, 0], '#4b3a2a'); B.add(G.cyl(2 + r(), 0, h, 7), [x, 2 + h / 2, z], [0, 0, 0], mixc(hex('#2f5d3a'), hex('#4f7d3a'), r())); };
+    for (let i = 0; i < 90; i++) tree(-600 + i * 13.5 + r() * 6, 140 + r() * 30);
+    for (let i = 0; i < 60; i++) tree(-600 + i * 20 + r() * 8, -180 + r() * 10);
+    for (let i = 0; i < 26; i++) tree(-205 + i * 6.5, 86 + r() * 2);
+    this.staticNode = this.root.add(new Node());
+    this.staticNode.add(new Node({ mesh: B.mesh() }));
+    this.staticNode.add(new Node({ mesh: GW.mesh(), lit: 0, col: TH === THEMES.day ? [0.75, 0.75, 0.75] : [1, 1, 1] }));
+    // facility pick boxes
+    const F = (name, desc, c, h) => this.facs.push({ name, desc, c, h });
+    this.facs.length = 0;
+    F('Raw-material stockyard', 'Coal, iron ore, limestone and dolomite arrive in bulk rakes and ships. Bulk is outside the container scope: Tata Steel already runs bulk shipping and rail programmes.', [-132, 5, 50], [70, 6, 32]);
+    F('Blast furnaces', 'Hot metal. Their refractory linings and tap-hole clay often arrive in containers; TRACE tracks those boxes.', [-95, 25, -112], [40, 26, 42]);
+    F('Coke ovens', 'Coal in by bulk rake, coke out by conveyor. No containers here.', [-181, 10, -95], [20, 12, 40]);
+    F('Steel melt shop (LD)', 'Uses ferro-alloys (FeMn, FeV, FeMo) and refractory bricks: typical import and domestic container cargo.', [-12, 18, -110], [24, 20, 20]);
+    F('Hot strip mill', 'HR coil. Export coils leave in boxes by rail to Haldia, or by truck.', [70, 8, -122], [66, 9, 10]);
+    F('Wire rod mill', 'Wire-rod coils, often consolidated with other products in export boxes.', [112, 5, -34], [23, 6, 8]);
+    F('Cold rolling + galvanising', 'CR and GI coil for export and domestic customers.', [180, 10, -76], [25, 18, 26]);
+    F('Tubes Division', 'Precision tubes, often in the same box as CR coil.', [182, 6, -2], [22, 7, 14]);
+    F('Plant container yard + RTG', 'Boxes are stuffed, emptied and staged here. Every lift is logged at 10 kg CO₂.', [104, 4, 28], [36, 8, 27]);
+    F('Gate 3', 'Each box is matched here to its e-way bill, FASTag trip, seal and weighbridge reading. Every match is a TRACE event.', [60, 4, 85], [15, 5, 8]);
+    F('TRACE data hub', 'One record per box: SAP, GST e-way bills, FASTag/ULIP, FOIS rake data, port systems, AIS and carrier APIs.', [30, 4, 66], [8, 5, 7]);
+    F('Gas holder', 'Utility.', [-25, 13, -40], [11, 14, 11]);
+    F('Cooling tower', 'Utility.', [-15, 16, 28], [14, 17, 14]);
+    this.facNode = new Node();
+  },
+  buildDynamic() {
+    // smoke sources
+    this.smoke = [[-200, 51, -52], [-162, 51, -52], [14, 49, -126], [-118, 53, -132], [-63, 53, -150], [-15, 33, 28], [-181, 25, -135]];
+    // beacons
+    this.beacons = [];
+    for (const p of [[-200, 51, -52], [-162, 51, -52], [14, 49, -126], [-118, 53, -132], [-63, 53, -150]]) {
+      const b = N(mesh('sph', () => G.sphere(0.7, 8)), '#ff2d2d', [p[0], p[1] + 0.6, p[2]], { lit: 0 }); this.root.add(b); this.beacons.push(b);
+    }
+    // gate barriers
+    const arm = mesh('arm', () => { const g = G.box(6.5, 0.22, 0.22); g.p = g.p.map((v, i) => (i % 3 === 0 ? v + 3.25 : v)); return g; });
+    this.barIn = N(arm, '#ef4444', [59, 1.3, 82.2], { rot: [0, Math.PI, 0] }); this.root.add(this.barIn);
+    this.barOut = N(arm, '#ef4444', [61, 1.3, 87.8], { rot: [0, 0, 0] }); this.root.add(this.barOut);
+    this.barInA = 0; this.barOutA = 0;
+    // hub ring
+    this.hubRing = N(mesh('ring1', () => G.ring(0.85, 1, 48)), '#38bdf8', [30, 6.6, 66], { lit: 0, alpha: 0.6, add: true, trans: true }); this.root.add(this.hubRing);
+    this.pulses = [];
+  },
+  // ---------- trucks ----------
+  truckNode(box) {
+    const g = new Node();
+    const cabCols = ['#e2e8f0', '#1d4ed8', '#dc2626', '#f97316', '#eab308', '#0f766e'];
+    g.add(N(mesh('chassis', () => G.box(6.2, 0.35, 1.9)), '#262a31', [-0.35, 0.75, 0]));
+    const cab = N(mesh('cab', () => G.box(1.7, 1.95, 2.05)), pick(cabCols), [2.45, 1.6, 0]); g.add(cab);
+    g.add(N(mesh('glass', () => G.box(0.06, 0.65, 1.75)), '#0b1220', [3.31, 2.0, 0]));
+    g.add(N(mesh('lamp', () => G.box(0.08, 0.22, 0.4)), '#fff4cc', [3.33, 0.95, 0.72], { lit: 0 }));
+    g.add(N(mesh('lamp', () => G.box(0.08, 0.22, 0.4)), '#fff4cc', [3.33, 0.95, -0.72], { lit: 0 }));
+    const wm = mesh('wheel', () => G.cyl(0.5, 0.5, 0.42, 12));
+    for (const x of [2.5, -1.5, -2.6]) for (const z of [-0.86, 0.86]) g.add(N(wm, '#111317', [x, 0.5, z], { rot: [Math.PI / 2, 0, 0] }));
+    const ct = new Node({ pos: [-0.85, 1.83, 0] }); g.add(ct);
+    const body = N(mesh('box20', () => G.box(4.1, 1.75, 2.0)), '#888', [0, 0, 0]); ct.add(body);
+    const door = N(mesh('door20', () => G.box(0.08, 1.6, 1.86)), '#555', [-2.07, 0, 0]); ct.add(door);
+    const ribs = N(mesh('ribs20', () => { const bb = new Batch(); for (let i = -1.7; i <= 1.75; i += 0.42) { bb.add(G.box(0.12, 1.55, 2.06), [i, 0, 0], [0, 0, 0], '#ffffff'); } return { p: bb.g.p, n: bb.g.n, bounds: () => bb.g.bounds() }; }), '#888', [0, 0, 0]); ct.add(ribs);
+    g.body = body; g.door = door; g.ribs = ribs; g.ct = ct; g.scl = [1.4, 1.4, 1.4];
+    const ring = N(mesh('selring', () => G.ring(4.2, 5, 40)), '#38bdf8', [0, 0.12, 0], { lit: 0, alpha: 0, add: true, trans: true }); g.add(ring); g.ring = ring;
+    return g;
+  },
+  colorFor(box) {
+    const mode = App.colorMode;
+    if (mode === 'co2') { const k = clamp((box.kgt - 20) / 60, 0, 1); return k < 0.5 ? mixc(hex('#22c55e'), hex('#eab308'), k * 2) : mixc(hex('#eab308'), hex('#ef4444'), (k - 0.5) * 2); }
+    if (mode === 'dq') { const k = clamp((box.l12 - 0.3) / 0.7, 0, 1); return mixc(hex('#64748b'), hex('#22c55e'), k); }
+    return hex(FLOWS[box.flow].col);
+  },
+  paint(tr) {
+    const c = this.colorFor(tr.box);
+    tr.node.body.col = c; tr.node.ribs.col = mixc(c, [1, 1, 1], 0.1); tr.node.door.col = mixc(c, [0, 0, 0], 0.4);
+  },
+  repaintAll() { this.trucks.forEach((t) => this.paint(t)); if (this.train) this.train.cars.forEach((c) => c.boxes.forEach((b) => { b.node.col = this.colorFor(b.box); })); },
+  spawn(box, pathKey, o = {}) {
+    const node = this.truckNode(box);
+    const tr = { box, pathKey, path: this.paths[pathKey], node, s: 0, v: 0, alpha: 1, stopT: 0, gateDone: false, dwell: 0, feat: o.feat || 0, delay: o.delay || 0, inbound: pathKey.startsWith('in'), fade: 0, yaw: 0 };
+    tr.s = (o.s || 0) * tr.path.len; if (tr.path.stops.gate !== undefined && tr.s > tr.path.stops.gate) tr.gateDone = true;
+    box.truck = tr;
+    this.root.add(node); this.trucks.push(tr); this.paint(tr); this.placeTruck(tr, 0, true);
+    if (tr.feat) {
+      tr.badge = label(`<b>${tr.feat}</b>`, () => [node.pos[0], node.pos[1] + 5.4, node.pos[2]], 'badge', { scene: 'plant' });
+    }
+    if (!tr.inbound && tr.s < 1) { tr.alpha = 0; tr.fade = 1; }
+    return tr;
+  },
+  spawnRandom(frac) {
+    if (frac === undefined) frac = 0;
+    const kinds = ['china', 'eu', 'north', 'milk', 'eu', 'china'];
+    const kind = pick(kinds);
+    const box = randomBox(kind);
+    const bay = pick(this.bays);
+    let key;
+    if (box.flow === 'Export') key = (rnd() < 0.5 ? 'outE' : 'outW') + bay;
+    else key = (rnd() < 0.55 ? 'inW' : 'inE') + bay;
+    if (frac > 0) { // avoid placing on top of others
+      const P = this.paths[key]; const s = frac * P.len;
+      for (const t of this.trucks) { const p = pathAt(P, s); if (Math.hypot(t.node.pos[0] - p.x, t.node.pos[2] - p.z) < 14) return; }
+    }
+    this.spawn(box, key, { s: frac });
+  },
+  placeTruck(tr, dt, snap) {
+    const p = pathAt(tr.path, tr.s);
+    const yaw = Math.atan2(-p.dz, p.dx);
+    if (snap) tr.yaw = yaw; else { let d = yaw - tr.yaw; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; tr.yaw += d * Math.min(1, dt * 6); }
+    tr.node.pos = [p.x, 0, p.z]; tr.node.rot = [0, tr.yaw, 0];
+    tr.dir = [Math.cos(tr.yaw), -Math.sin(tr.yaw)];
+  },
+  removeTruck(tr) {
+    this.root.remove(tr.node); this.trucks.splice(this.trucks.indexOf(tr), 1);
+    if (tr.badge) { tr.badge.el.remove(); LABELS.list.splice(LABELS.list.indexOf(tr.badge), 1); }
+  },
+  restartFeatured(tr) {
+    const keys = { 1: 'inW112', 2: 'outE84', 3: 'inE126', 4: 'inW98' };
+    tr.s = 0; tr.v = 0; tr.gateDone = false; tr.dwell = 0; tr.stopT = 0; tr.alpha = tr.inbound ? 1 : 0; tr.fade = tr.inbound ? 0 : 1;
+    tr.path = this.paths[keys[tr.feat]]; tr.pathKey = keys[tr.feat];
+    if (tr.inbound) tr.s = tr.path.len * 0.52;
+    this.placeTruck(tr, 0, true);
+  },
+  bringFeatured(n) { // make sure the featured truck is in a nice visible spot
+    const tr = this.trucks.find((t) => t.feat === n); if (!tr) return null;
+    const P = tr.path, g = P.stops.gate;
+    if (tr.inbound) { if (tr.s < g - 120 || tr.dwell > 0 || tr.fade < 0) { tr.s = g - 70; tr.gateDone = false; tr.alpha = 1; tr.fade = 0; tr.dwell = 0; tr.v = 6; this.placeTruck(tr, 0, true); } }
+    else if (tr.s > g + 120 || tr.alpha < 0.5) { tr.s = Math.max(0, g - 25); tr.gateDone = false; tr.alpha = 1; tr.fade = 0; this.placeTruck(tr, 0, true); }
+    return tr;
+  },
+  stepTrucks(dt) {
+    for (const tr of this.trucks.slice()) {
+      if (tr.held) { this.placeTruck(tr, dt); continue; }
+      if (tr.delay > 0) { tr.delay -= dt; continue; }
+      if (tr.fade > 0) { tr.alpha = Math.min(1, tr.alpha + dt * 1.2); if (tr.alpha >= 1) tr.fade = 0; }
+      if (tr.fade < 0) { tr.alpha -= dt * 1.1; if (tr.alpha <= 0) { if (tr.feat) { tr.delay = 4; this.restartFeatured(tr); } else this.removeTruck(tr); } this.applyAlpha(tr); continue; }
+      const p = tr.path;
+      // target speed
+      const z = tr.node.pos[2];
+      let vt = (z > 93 && Math.abs(tr.node.pos[0] - 60) > 18) ? 15 : 6.5;
+      const gs = p.stops.gate;
+      if (!tr.gateDone && gs !== undefined) {
+        const dg = gs - tr.s;
+        if (dg < 14) vt = Math.min(vt, Math.max(0.4, dg * 0.6));
+        if (dg <= 0.3) { tr.v = 0; tr.stopT += dt; if (tr.stopT === dt) this.gateEvent(tr); if (tr.stopT > 1.8) { tr.gateDone = true; } this.placeTruck(tr, dt); continue; }
+      }
+      const rem = p.len - tr.s;
+      if (tr.inbound && rem < 10) vt = Math.min(vt, Math.max(0, rem * 0.6));
+      // spacing
+      for (const o of this.trucks) {
+        if (o === tr || o.delay > 0 || o.alpha < 0.3) continue;
+        const dx = o.node.pos[0] - tr.node.pos[0], dz = o.node.pos[2] - tr.node.pos[2]; const d = Math.hypot(dx, dz);
+        if (d < 17 && d > 0.01) { const f = (dx * tr.dir[0] + dz * tr.dir[1]) / d; if (f > 0.82 && (o.dir[0] * tr.dir[0] + o.dir[1] * tr.dir[1]) > 0.3) vt = Math.min(vt, Math.max(0, (d - 11.5) * 0.8)); }
+      }
+      tr.v += clamp(vt - tr.v, -14 * dt, 7 * dt);
+      tr.s += tr.v * dt;
+      if (tr.inbound && rem < 0.6) { tr.dwell += dt; if (tr.dwell > 3.5) tr.fade = -1; }
+      if (!tr.inbound && tr.s >= p.len - 1) { if (tr.feat) { tr.delay = 3; this.restartFeatured(tr); } else this.removeTruck(tr); continue; }
+      this.placeTruck(tr, dt);
+      this.applyAlpha(tr);
+    }
+  },
+  applyAlpha(tr) { const a = tr.alpha; const f = (n) => { n.alpha = a < 0.999 ? a : 1; n.children.forEach(f); }; tr.node.children.forEach((c) => { if (c !== tr.node.ring) f(c); }); },
+  gateEvent(tr) {
+    const id = fmtId(tr.box.id);
+    if (tr.inbound) this.pushFeed('Gate-in', `${id} · e-way bill ✓ FASTag ✓ seal ✓`, tr.box.flow);
+    else this.pushFeed('Gate-out', `${id} · SAP delivery ✓ weighbridge ${(tr.box.mass + 2.3).toFixed(1)} t`, tr.box.flow);
+    const ring = N(mesh('pulse', () => G.ring(0.9, 1, 48)), '#38bdf8', [tr.node.pos[0], 0.2, tr.node.pos[2]], { lit: 0, alpha: 0.9, add: true, trans: true });
+    this.root.add(ring); this.pulses.push({ n: ring, t: 0 });
+    if (tr.inbound) this.barInT = 2.2; else this.barOutT = 2.2;
+  },
+  pushFeed(kind, txt, flow) {
+    const mm = Math.floor(this.simMin) % 1440; const t = `${String(Math.floor(mm / 60)).padStart(2, '0')}:${String(mm % 60).padStart(2, '0')}`;
+    App.feed(t, kind, txt, flow);
+  },
+  // ---------- train ----------
+  trainCycle(first) {
+    if (this.train) { this.train.cars.forEach((c) => this.root.remove(c.node)); this.root.remove(this.train.loco); }
+    const dir = this._tdir = (this._tdir || 1) * -1;
+    const bulk = !first && rnd() < 0.35;
+    const z = bulk ? 126 : 118;
+    const loco = new Node();
+    loco.add(N(mesh('loco', () => G.box(8, 2.6, 2.5)), bulk ? '#1e40af' : '#b91c1c', [0, 2.2, 0]));
+    loco.add(N(mesh('locoroof', () => G.box(6, 0.4, 2.1)), '#9ca3af', [0, 3.7, 0]));
+    loco.add(N(mesh('panto', () => G.box(1.6, 1.2, 0.1)), '#cbd5e1', [1.5, 4.5, 0], { rot: [0, 0, 0.5] }));
+    loco.add(N(mesh('locostripe', () => G.box(8.05, 0.35, 2.55)), '#facc15', [0, 1.4, 0]));
+    this.root.add(loco);
+    const cars = [];
+    const n = 16;
+    for (let i = 0; i < n; i++) {
+      const cn = new Node();
+      cn.add(N(mesh('wagon', () => G.box(8.6, 0.45, 2.3)), '#3f3f46', [0, 1.2, 0]));
+      for (const x of [-3, 3]) cn.add(N(mesh('bogie', () => G.box(2, 0.7, 2)), '#1f2937', [x, 0.7, 0]));
+      const car = { node: cn, boxes: [] };
+      if (bulk) { cn.add(N(mesh('boxn', () => G.box(8.4, 2.2, 2.4)), '#57534e', [0, 2.5, 0])); cn.add(N(mesh('ore', () => G.frustum(8, 2.2, 6, 0.8, 0.9)), '#7a3b25', [0, 4, 0])); car.bulk = true; }
+      else for (const x of [-2.15, 2.15]) {
+        if (rnd() < 0.12) continue;
+        const box = randomBox(dir > 0 ? pick(['eu', 'eu', 'china']) : pick(['china', 'china', 'north']));
+        box.status = dir > 0 ? 'On rake: Tatanagar ICD → Haldia' : 'On rake: Haldia → Tatanagar ICD';
+        const bn = N(mesh('box20', () => G.box(4.1, 1.75, 2.0)), this.colorFor(box), [x, 2.32, 0]); cn.add(bn);
+        car.boxes.push({ box, node: bn });
+      }
+      this.root.add(cn); cars.push(car);
+    }
+    this.train = { loco, cars, dir, z, x: dir > 0 ? -520 : 520, v: bulk ? 11 : 14, bulk, wait: first ? 0 : 6 };
+    if (first) this.train.x = dir > 0 ? -260 : 260;
+  },
+  stepTrain(dt) {
+    const T = this.train; if (!T) return;
+    if (T.wait > 0) { T.wait -= dt; }
+    else T.x += T.dir * T.v * dt;
+    const pos = (i) => T.x - T.dir * (i * 9.2 + 9);
+    T.loco.pos = [T.x, 0, T.z]; T.loco.rot = [0, T.dir > 0 ? 0 : Math.PI, 0];
+    T.cars.forEach((c, i) => { c.node.pos = [pos(i), 0, T.z]; });
+    const tail = pos(T.cars.length);
+    if ((T.dir > 0 && tail > 560) || (T.dir < 0 && tail < -560)) this.trainCycle(false);
+  },
+  // ---------- frame ----------
+  update(dt, t) {
+    this.clock += dt; this.simMin += dt * 0.5;
+    if (!App.paused) {
+      this.stepTrucks(dt); this.stepTrain(dt);
+      this.nextSpawn -= dt;
+      if (this.nextSpawn <= 0) { if (this.trucks.length < 14) this.spawnRandom(0); this.nextSpawn = 3 + rnd() * 3; }
+    }
+    // smoke
+    if (App.scene === this) for (const s of this.smoke) if (rnd() < dt * 5) emit([s[0] + (rnd() - 0.5), s[1], s[2] + (rnd() - 0.5)], { v: [1.6 + rnd(), 3 + rnd() * 2, 0.6], max: 6 + rnd() * 3, s0: 4, s1: 18, c: TH === THEMES.day ? [0.55, 0.57, 0.6] : [0.62, 0.66, 0.74], a0: 0.32, a1: 0 });
+    this.beacons.forEach((b, i) => { const on = Math.sin(t * 3 + i) > 0.2; b.em = on ? [1, 0.1, 0.1] : [0, 0, 0]; b.col = on ? [1, 0.2, 0.2] : [0.3, 0.05, 0.05]; });
+    // barriers
+    this.barInT = (this.barInT || 0) - dt; this.barOutT = (this.barOutT || 0) - dt;
+    this.barInA += ((this.barInT > 0 && this.barInT < 1.6 ? 1.35 : 0) - this.barInA) * Math.min(1, dt * 5);
+    this.barOutA += ((this.barOutT > 0 && this.barOutT < 1.6 ? 1.35 : 0) - this.barOutA) * Math.min(1, dt * 5);
+    this.barIn.rot = [0, Math.PI, this.barInA]; this.barOut.rot = [0, 0, this.barOutA];
+    // hub pulse
+    const k = (t * 0.6) % 1; this.hubRing.scl = [1 + k * 14, 1, 1 + k * 14]; this.hubRing.alpha = 0.7 * (1 - k) * TH.glow + 0.05;
+    this.pulses = this.pulses.filter((p) => { p.t += dt; const s = 1 + p.t * 16; p.n.scl = [s, 1, s]; p.n.alpha = Math.max(0, 0.9 - p.t * 0.75); if (p.t > 1.2) { this.root.remove(p.n); return false; } return true; });
+    // highlight
+    for (const tr of this.trucks) {
+      const hov = App.hover && App.hover.truck === tr;
+      const r = tr.node.ring; const target = hov ? 0.85 : 0;
+      r.alpha += (target - r.alpha) * Math.min(1, dt * 10); r.col = hex(FLOWS[tr.box.flow].col);
+      const em = hov ? 0.25 + 0.15 * Math.sin(t * 8) : 0;
+      tr.node.body.em = [em, em, em];
+    }
+    if (App.hover && App.hover.wagon) { const b = App.hover.wagon.node; b.em = [0.3, 0.3, 0.3]; }
+    if (this._lastWag && (!App.hover || App.hover.wagon !== this._lastWag)) this._lastWag.node.em = [0, 0, 0];
+    this._lastWag = App.hover && App.hover.wagon;
+    // idle orbit
+    if (App.idle > 25 && !App.tour && App.scene === this && !CAM.follow) CAM.yaw += dt * 0.03;
+  },
+  pick(ray) {
+    let best = null, bt = 1e9;
+    for (const tr of this.trucks) {
+      if (tr.alpha < 0.4 || tr.delay > 0) continue;
+      const t = rayBox(ray, tr.node, [0, 1.6, 0], [3.8, 1.9, 1.5]);
+      if (t !== null && t < bt) { bt = t; best = { truck: tr, box: tr.box }; }
+    }
+    if (this.train) for (const c of this.train.cars) for (const b of c.boxes) {
+      const t = rayBox(ray, b.node, [0, 0, 0], [2.1, 0.95, 1.05]); if (t !== null && t < bt) { bt = t; best = { wagon: b, box: b.box }; }
+    }
+    if (this.train && this.train.bulk) for (const c of this.train.cars) { const t = rayBox(ray, c.node, [0, 2.5, 0], [4.5, 2, 1.3]); if (t !== null && t < bt) { bt = t; best = { fac: { name: 'Iron-ore rake (bulk)', desc: 'Open BOXN wagons. Bulk cargo is outside the container scope; Tata Steel already decarbonises bulk rail and shipping.' } }; } }
+    if (best) return best;
+    const id = this.facNode;
+    for (const f of this.facs) { const t = rayBox(ray, id, f.c, f.h); if (t !== null && t < bt) { bt = t; best = { fac: f }; } }
+    return best;
+  },
+  enter() {
+    CAM.minD = 25; CAM.maxD = 700; CAM.minP = 0.18; CAM.maxP = 1.45;
+  },
+};
+
+// ================= SCENE 2: INSIDE THE BOX (top-down) =================
+const KIND = {
+  coil: { k: 0.16, min: 1.9 }, gi: { k: 0.16, min: 1.9 }, tubes: { k: 0.24, min: 1.7 }, wire: { k: 0.22, min: 1.4 },
+  drums: { k: 0.32, min: 1.3 }, bricks: { k: 0.16, min: 1.3 }, crate: { k: 0.55, min: 1.2 }, rolls: { k: 0.4, min: 3 },
+  castable: { k: 0.2, min: 1.2 }, bags: { k: 0.24, min: 1.4 },
+};
+const BoxView = {
+  root: new Node(), name: 'box', items: [], box: null,
+  build(box) {
+    this.box = box; this.root.clear(); this.items = []; clearLabels('box');
+    const T = TH;
+    const S = new Batch();
+    S.add(G.plane(400, 400), [0, -0.02, 0], [0, 0, 0], T.ground);
+    S.add(G.cyl(15, 15, 0.3, 64), [0, 0.15, 0], [0, 0, 0], T.pad);
+    for (let i = -14; i <= 14; i += 2) { const h = Math.sqrt(Math.max(0, 15 * 15 - i * i)) * 2; S.add(G.box(0.04, 0.02, h), [i, 0.31, 0], [0, 0, 0], T.mark); S.add(G.box(h, 0.02, 0.04), [0, 0.31, i], [0, 0, 0], T.mark); }
+    // trailer
+    S.add(G.box(7.6, 0.3, 2.3), [-0.2, 1.2, 0], [0, 0, 0], '#262a31');
+    for (const x of [-2.4, -3.4, 2.9]) for (const z of [-0.95, 0.95]) S.add(G.cyl(0.55, 0.55, 0.45, 14), [x, 0.85, z], [Math.PI / 2, 0, 0], '#111317');
+    S.add(G.box(2.1, 2.5, 2.45), [4.6, 2.2, 0], [0, 0, 0], '#e2e8f0'); S.add(G.box(0.06, 0.8, 2.1), [5.66, 2.8, 0], [0, 0, 0], '#0b1220');
+    // floor
+    S.add(G.box(6.06, 0.12, 2.44), [0, 1.44, 0], [0, 0, 0], '#6b4f35');
+    for (let x = -2.9; x < 3; x += 0.32) S.add(G.box(0.02, 0.005, 2.3), [x, 1.505, 0], [0, 0, 0], '#5a412b');
+    this.root.add(new Node({ mesh: S.mesh(), _static: true }));
+    // container shell (fades)
+    const c = mixc(Plant.colorFor(box), [0.55, 0.6, 0.68], 0.35);
+    const wall = (geo, pos, rot) => { const n = N(R.mesh(geo), c, pos, { rot: rot || [0, 0, 0] }); this.root.add(n); return n; };
+    const ribbed = (L, H) => { const b = new Batch(); b.add(G.box(L, H, 0.05), [0, 0, 0]); for (let x = -L / 2 + 0.15; x < L / 2; x += 0.3) b.add(G.box(0.12, H - 0.05, 0.1), [x, 0, 0.04]); return b.g; };
+    this.walls = [
+      wall(ribbed(6.06, 2.59), [0, 2.8, 1.2], [0, 0, 0]),
+      wall(ribbed(6.06, 2.59), [0, 2.8, -1.2], [0, Math.PI, 0]),
+      wall(ribbed(2.44, 2.59), [3.03, 2.8, 0], [0, Math.PI / 2, 0]),
+    ];
+    this.roof = wall(G.box(6.1, 0.07, 2.48), [0, 4.12, 0]);
+    const dm = mesh('doorleaf', () => { const g = G.box(1.22, 2.55, 0.06); g.p = g.p.map((v, i) => (i % 3 === 0 ? v + 0.61 : v)); return g; });
+    this.doorL = N(dm, mixc(c, [0, 0, 0], 0.25), [-3.05, 2.8, 1.22], { rot: [0, Math.PI / 2, 0] }); this.root.add(this.doorL);
+    this.doorR = N(dm, mixc(c, [0, 0, 0], 0.25), [-3.05, 2.8, -1.22], { rot: [0, -Math.PI / 2, 0] }); this.root.add(this.doorR);
+    this.shellCol = c;
+    // pack lots
+    const need = box.lots.map((l) => Math.max(KIND[l.kind].min, l.t * KIND[l.kind].k));
+    const tot = need.reduce((a, x) => a + x, 0), avail = 5.85 - 0.12 * (box.lots.length - 1);
+    let x = -2.92;
+    box.lots.forEach((l, i) => {
+      const len = need[i] / tot * avail; const seg = [x, x + len]; x += len + 0.12;
+      l._seg = seg;
+      const zone = N(mesh('zone', () => G.plane(1, 1)), l.color, [(seg[0] + seg[1]) / 2, 1.512, 0], { scl: [len, 1, 2.36], alpha: 0.28, lit: 0, trans: true, add: true }); this.root.add(zone); l._zone = zone;
+      this.fill(l, seg);
+      l._lbl = label(`<i style="background:${l.color}"></i><b>${l.id} · ${l.short}</b><span>${l.t.toFixed(1)} t · ${kg(l.kg)} CO₂</span>`, [(seg[0] + seg[1]) / 2, 5.2, 0], 'lotlbl', { scene: 'box', show: false });
+    });
+    // scan beam
+    this.beam = N(mesh('beam', () => G.box(0.08, 3.2, 2.7)), '#38bdf8', [-4, 2.9, 0], { lit: 0, alpha: 0, add: true, trans: true }); this.root.add(this.beam);
+    this.halo = N(mesh('halo', () => G.ring(14.6, 15.2, 96)), '#38bdf8', [0, 0.33, 0], { lit: 0, alpha: 0.5, add: true, trans: true }); this.root.add(this.halo);
+  },
+  item(l, geo, key, col, pos, rot, extra) {
+    const n = N(mesh(key, () => geo()), col, pos, Object.assign({ rot: rot || [0, 0, 0] }, extra || {}));
+    n.lot = l; this.root.add(n); this.items.push(n); return n;
+  },
+  fill(l, [x0, x1]) {
+    const y0 = 1.51, len = x1 - x0, cx = (x0 + x1) / 2;
+    const it = (...a) => this.item(l, ...a);
+    const tag = (pos, w = 0.06, h = 0.5, d = 0.5) => it(() => G.box(w, h, d), 'tag' + w + h + d, l.color, pos, null, { lit: 0.4 });
+    const grid = (pitchX, rows, fn) => { const cols = Math.max(1, Math.floor(len / pitchX)); const px = len / cols; let n = 0; for (let i = 0; i < cols; i++) for (let r = 0; r < rows; r++) fn(x0 + px * (i + 0.5), rows === 1 ? 0 : (r - (rows - 1) / 2) * (2.2 / rows), n++, i, r); return cols; };
+    switch (l.kind) {
+      case 'coil': case 'gi': {
+        const col = l.kind === 'gi' ? '#a9b9c9' : '#c9cfd8';
+        const n = clamp(Math.min(Math.floor(len / 1.75), Math.ceil(l.t / 7)), 1, 3); const px = len / n;
+        for (let i = 0; i < n; i++) { const x = x0 + px * (i + 0.5);
+          it(() => G.box(1.5, 0.22, 1.3), 'cradle', '#8b6a45', [x, y0 + 0.11, 0]);
+          it(() => G.cyl(0.82, 0.82, 1.25, 28), 'coilbody', col, [x, y0 + 0.22 + 0.82, 0], [Math.PI / 2, 0, 0]);
+          it(() => G.cyl(0.32, 0.32, 1.27, 18), 'coileye', '#1f2937', [x, y0 + 0.22 + 0.82, 0], [Math.PI / 2, 0, 0]);
+          it(() => G.box(0.06, 1.7, 1.28), 'coilband', l.color, [x, y0 + 0.22 + 0.82, 0], null, { lit: 0.5 });
+        }
+        break; }
+      case 'tubes': {
+        const L = len - 0.2; const key = 'tb' + L.toFixed(2);
+        const bundle = () => { const b = new Batch(); for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) b.add(G.cyl(0.085, 0.085, L, 10), [0, r * 0.18, (c - 1.5) * 0.18], [0, 0, Math.PI / 2], '#b8c0ca'); return b.g; };
+        for (const z of [-0.55, 0.55]) for (let s = 0; s < 2; s++) { it(bundle, key, '#b8c0ca', [cx, y0 + 0.12 + s * 0.6, z]); for (const o of [-L / 3, 0, L / 3]) it(() => G.box(0.06, 0.62, 0.8), 'strap', l.color, [cx + o, y0 + 0.3 + s * 0.6, z], null, { lit: 0.5 }); }
+        break; }
+      case 'wire': {
+        grid(1.25, 2, (x, z) => { for (let s = 0; s < 2; s++) it(() => G.torus(0.52, 0.2, 22, 8), 'wrc', '#6b7280', [x, y0 + 0.22 + s * 0.42, z]); it(() => G.box(0.06, 0.8, 0.3), 'wtag', l.color, [x, y0 + 0.5, z + 0.73], null, { lit: 0.5 }); });
+        break; }
+      case 'drums': {
+        const want = Math.max(1, Math.round(l.t));
+        grid(1.2, 2, (x, z, n) => { if (n >= want) return; it(() => G.box(1.1, 0.13, 1.0), 'pallet', '#a07a4c', [x, y0 + 0.07, z]); for (const dx of [-0.27, 0.27]) for (const dz of [-0.25, 0.25]) it(() => G.cyl(0.25, 0.25, 0.86, 16), 'drum', '#3f5f8a', [x + dx, y0 + 0.13 + 0.43, z + dz]); it(() => G.box(0.04, 0.3, 0.9), 'dtag', l.color, [x - 0.56, y0 + 0.6, z], null, { lit: 0.5 }); });
+        break; }
+      case 'bricks': {
+        const dark = /MgO/.test(l.short); const want = Math.max(2, Math.round(l.t / 1.1));
+        grid(1.12, 2, (x, z, n) => { for (let s = 0; s < 2; s++) { if (n * 2 + s >= want) continue; const y = y0 + s * 0.92; it(() => G.box(1.05, 0.13, 1.0), 'pallet2', '#a07a4c', [x, y + 0.07, z]); it(() => G.box(1.0, 0.72, 0.96), 'brick', dark ? '#45413e' : '#d9ccb1', [x, y + 0.13 + 0.36, z]); for (const h of [0.2, 0.44, 0.68]) it(() => G.box(1.01, 0.02, 0.97), 'bline', dark ? '#2b2826' : '#b9aa8d', [x, y + 0.13 + h, z]); it(() => G.box(0.04, 0.22, 0.97), 'bstrap', l.color, [x + 0.3, y + 0.5, z], null, { lit: 0.5 }); } });
+        break; }
+      case 'crate': {
+        const want = Math.max(1, Math.ceil(l.t / 1.0));
+        grid(1.25, 2, (x, z, n) => { if (n >= want) return; it(() => G.box(1.15, 0.95, 1.0), 'crate', '#b08a5a', [x, y0 + 0.48, z]); for (const o of [-0.5, 0.5]) it(() => G.box(0.08, 0.97, 1.02), 'crfr', '#7a5a35', [x + o, y0 + 0.48, z]); it(() => G.box(0.6, 0.02, 0.5), 'crtag', l.color, [x, y0 + 0.97, z], null, { lit: 0.5 }); });
+        break; }
+      case 'rolls': {
+        const L = Math.min(len - 0.6, 4.6); const key = 'roll' + L.toFixed(2);
+        for (const z of [-0.6, 0.6]) {
+          it(() => G.cyl(0.46, 0.46, L, 26), key, '#8b9099', [cx, y0 + 0.3 + 0.46, z], [0, 0, Math.PI / 2]);
+          for (const s of [-1, 1]) { it(() => G.cyl(0.26, 0.26, 0.5, 18), 'neck', '#6b7280', [cx + s * (L / 2 + 0.25), y0 + 0.3 + 0.46, z], [0, 0, Math.PI / 2]); it(() => G.box(0.4, 0.3, 1.1), 'rcradle', '#8b6a45', [cx + s * L * 0.33, y0 + 0.15, z]); }
+          it(() => G.box(0.12, 0.96, 0.96), 'rband', l.color, [cx, y0 + 0.76, z], null, { lit: 0.5 });
+        }
+        break; }
+      case 'castable': {
+        const want = Math.max(2, Math.round(l.t / 1.0));
+        grid(1.12, 2, (x, z, n) => { for (let s = 0; s < 2; s++) { if (n * 2 + s >= want) continue; const y = y0 + s * 0.85; it(() => G.box(1.05, 0.13, 1.0), 'pallet2', '#a07a4c', [x, y + 0.07, z]); for (let k = 0; k < 4; k++) for (const dz of [-0.25, 0.25]) it(() => G.box(0.98, 0.16, 0.46), 'cbag', k % 2 ? '#d6cfc2' : '#cbc3b4', [x, y + 0.21 + k * 0.17, z + dz]); it(() => G.box(0.04, 0.3, 0.9), 'ctag', l.color, [x + 0.5, y + 0.5, z], null, { lit: 0.5 }); } });
+        break; }
+      case 'bags': {
+        const want = Math.max(2, Math.round(l.t / 1.6));
+        grid(1.05, 2, (x, z, n) => { if (n >= want) return; it(() => G.box(0.95, 0.9, 0.95), 'fibc', '#e7e2d4', [x, y0 + 0.45, z]); it(() => G.frustum(0.95, 0.95, 0.5, 0.5, 0.18), 'fibctop', '#dcd6c6', [x, y0 + 0.99, z]); it(() => G.box(0.5, 0.02, 0.4), 'fibctag', l.color, [x, y0 + 1.09, z], null, { lit: 0.5 }); });
+        break; }
+    }
+  },
+  enter(box, fromPlant) {
+    this.build(box);
+    CAM.follow = null; CAM.minD = 6; CAM.maxD = 60; CAM.minP = 0.3; CAM.maxP = 1.52;
+    this.state = 'opening'; this.tOpen = 0;
+    if (fromPlant) { CAM.target = [0, 2, 0]; CAM.yaw = 0.2; CAM.pitch = 1.42; CAM.dist = 26; CAM.fov = 0.7; }
+    camTo({ target: [0.3, 2.0, 0], yaw: 0.16, pitch: 1.06, dist: 13.5, fov: 0.7 }, 2.4);
+    this.roof.pos = [0, 4.12, 0]; this.roof.alpha = 1; this.walls.forEach((w) => { w.alpha = 1; });
+  },
+  update(dt, t) {
+    if (this.state === 'opening') {
+      this.tOpen += dt; const k = clamp((this.tOpen - 0.5) / 1.6, 0, 1), e = ease(k);
+      this.roof.pos = [0, 4.12 + e * 3.5, -e * 1.5]; this.roof.alpha = 1 - e;
+      this.doorL.rot = [0, Math.PI / 2 + e * 1.9, 0]; this.doorR.rot = [0, -Math.PI / 2 - e * 1.9, 0];
+      this.walls.forEach((w, i) => { w.alpha = 1 - e * (i === 0 ? 0.9 : 0.72); });
+      const kb = clamp((this.tOpen - 1.2) / 1.6, 0, 1);
+      this.beam.pos = [-3.3 + kb * 6.6, 2.9, 0]; this.beam.alpha = kb > 0 && kb < 1 ? 0.75 : 0;
+      for (const l of this.box.lots) if (this.beam.pos[0] > l._seg[0] && kb > 0) l._lbl.show = true;
+      if (this.tOpen > 3) { this.state = 'open'; this.box.lots.forEach((l) => { l._lbl.show = true; }); App.boxOpened(); }
+    }
+    this.halo.alpha = (0.35 + 0.15 * Math.sin(t * 2)) * TH.glow + 0.1;
+    const hl = App.hover && App.hover.lot, sel = App.lotSel;
+    for (const n of this.items) { const on = n.lot === hl || n.lot === sel; const v = on ? 0.18 + 0.12 * Math.sin(t * 7) : 0; const c = hex(n.lot.color); n.em = on ? [c[0] * v, c[1] * v, c[2] * v] : [0, 0, 0]; }
+    for (const l of this.box.lots) { const on = l === hl || l === sel; l._zone.alpha = (on ? 0.55 : 0.22) * (TH.glow * 0.6 + 0.4); l._lbl.el.classList.toggle('on', on); }
+  },
+  pick(ray) {
+    let best = null, bt = 1e9;
+    for (const n of this.items) { const b = n.mesh.bounds; const c = [(b[0][0] + b[1][0]) / 2, (b[0][1] + b[1][1]) / 2, (b[0][2] + b[1][2]) / 2], h = [(b[1][0] - b[0][0]) / 2, (b[1][1] - b[0][1]) / 2, (b[1][2] - b[0][2]) / 2]; const t = rayBox(ray, n, c, h); if (t !== null && t < bt) { bt = t; best = { lot: n.lot }; } }
+    return best;
+  },
+  dispose() { this.root.children.forEach((n) => { if (n._static || (n.mesh && !Object.values(MESH).includes(n.mesh))) R.free(n.mesh); }); this.root.clear(); clearLabels('box'); },
+};
+
+// ================= SCENE 3: JOURNEY TRACE =================
+const ARCF = { road: 0.2, rail: 0.11, sea: 0.035, barge: 0.06 };
+const Journey = {
+  root: new Node(), name: 'journey', box: null, mode: 'balanced', lot: null, legNodes: [],
+  build(box) {
+    this.dispose();
+    this.box = box;
+    const legs = box.legs;
+    this.ids = []; legs.forEach((L) => { [L.from, L.to].forEach((n) => { if (!this.ids.includes(n)) this.ids.push(n); }); });
+    this.strands = box.lots.map((l) => l.id); if (legs.some((L) => L.strands.includes('BOX'))) this.strands.push('BOX');
+    this.lane = {}; this.strands.forEach((s, i) => { this.lane[s] = (i - (this.strands.length - 1) / 2) * 44; });
+    this.scol = {}; box.lots.forEach((l) => { this.scol[l.id] = l.color; }); this.scol.BOX = BOXCOL;
+    // ground
+    const S = new Batch();
+    S.add(G.plane(3000, 3000), [0, -0.05, 0], [0, 0, 0], mixc(hex(TH.ground), hex(TH.pad), 0.6));
+    const gc = mixc(hex(TH.ground), hex(TH.mark), 0.22);
+    for (let x = -400; x <= 400; x += 25) S.add(G.box(0.25, 0.02, 400), [x, 0.0, 0], [0, 0, 0], gc);
+    for (let z = -200; z <= 200; z += 25) S.add(G.box(800, 0.02, 0.25), [0, 0.0, z], [0, 0, 0], gc);
+    this.ground = new Node({ mesh: S.mesh(), _static: true }); this.root.add(this.ground);
+    this.dyn = new Node(); this.root.add(this.dyn);
+    this.icons = {};
+    this.P = this.layout(this.mode);
+    this.ids.forEach((id) => { const g = this.icon(box.nodes[id].kind, id); g.pos = [this.P[id][0], 0, this.P[id][1]]; this.root.add(g); this.icons[id] = g; });
+    this.maxKg = Math.max(...legs.filter((L) => !L.outside).map((L) => L.kg), 1);
+    this.buildLegs();
+    this.makeLabels();
+    this.reveal = {}; legs.forEach((L, i) => { this.reveal[i] = 0; }); box.lifts.forEach((L, i) => { this.reveal['f' + i] = 0; });
+    this.traced = false; this.trace = null;
+  },
+  layout(mode) {
+    const legs = this.box.legs;
+    const w0 = (L) => mode === 'distance' ? L.km : mode === 'co2' ? L.kg : 14 + 26 * Math.log10(1 + L.km / 10);
+    const mx = Math.max(...legs.map(w0)); const mn = mode === 'balanced' ? 0 : mx * 0.04;
+    const ww = (L) => Math.max(w0(L), mn);
+    const out = {}; legs.forEach((L) => { (out[L.from] = out[L.from] || []).push(L); });
+    const memo = {};
+    const dist = (n) => { if (memo[n] !== undefined) return memo[n]; let m = 0; for (const L of out[n] || []) m = Math.max(m, ww(L) + dist(L.to)); memo[n] = m; return m; };
+    const maxD = Math.max(...this.ids.map(dist)); const W = 300, sc = W / maxD;
+    const touch = {}; legs.forEach((L) => { [L.from, L.to].forEach((n) => { (touch[n] = touch[n] || new Set()); L.strands.forEach((s) => touch[n].add(s)); }); });
+    const P = {};
+    this.ids.forEach((n) => {
+      let ss = [...touch[n]]; const lots = ss.filter((s) => s !== 'BOX'); if (lots.length) ss = lots;
+      const z = ss.reduce((a, s) => a + this.lane[s], 0) / ss.length;
+      P[n] = [W / 2 - dist(n) * sc, z];
+    });
+    const dest = legs.filter((L) => !L.outside).slice(-1)[0].to; const zs = P[dest][1];
+    for (const n in P) P[n][1] -= zs;
+    return P;
+  },
+  icon(kind, id) {
+    const g = new Node();
+    const add = (geo, key, col, pos, o) => g.add(N(mesh(key, geo), col, pos, o));
+    add(() => G.cyl(6.5, 6.5, 0.5, 36), 'npad', TH.pad, [0, 0.25, 0]);
+    add(() => G.ring(6.4, 7.2, 48), 'nring', '#38bdf8', [0, 0.52, 0], { lit: 0, alpha: 0.5, add: true, trans: true });
+    const flow = FLOWS[this.box.flow].col;
+    if (kind === 'supplier' || kind === 'mill') {
+      add(() => G.box(6, 3.4, 4.5), 'sup1', '#64748b', [0, 2.2, 0]); add(() => G.prism(6, 1.6, 4.5), 'sup2', '#475569', [0, 3.9, 0]);
+      add(() => G.cyl(0.5, 0.4, 6, 10), 'sup3', '#94a3b8', [2.2, 3.5, -1.2]);
+    } else if (kind === 'plant') {
+      add(() => G.cyl(1.9, 1.5, 10, 16), 'pl1', '#5b5550', [-2, 5.5, 0]); add(() => G.box(6, 4, 5), 'pl2', '#475569', [2, 2.5, 0]);
+      add(() => G.cyl(0.6, 0.45, 12, 10), 'pl3', '#9aa1ab', [-4.5, 6.5, -2]); add(() => G.box(6.2, 0.4, 5.2), 'pl4', flow, [2, 4.6, 0], { lit: 0.6 });
+    } else if (kind === 'icd' || kind === 'rail') {
+      for (let i = 0; i < 3; i++) for (let t = 0; t < 2 - (i % 2); t++) add(() => G.box(2.6, 1.15, 1.25), 'icdb', BOXCOLS[(i * 3 + t) % BOXCOLS.length], [-2.8 + i * 2.8, 1.1 + t * 1.2, -1]);
+      add(() => G.box(8.5, 0.35, 0.9), 'icdr', '#9aa4b2', [0, 0.65, 2.2]);
+      for (const x of [-4, 4]) add(() => G.box(0.4, 5.2, 0.4), 'icdl', '#f59e0b', [x, 2.9, 0.5]);
+      add(() => G.box(8.4, 0.5, 0.5), 'icdt', '#f59e0b', [0, 5.5, 0.5]);
+    } else if (kind === 'port') {
+      add(() => G.box(11, 1.2, 6), 'q1', '#6b7280', [0, 1, 0]);
+      for (const x of [-2, 2]) for (const z of [-2, 1]) add(() => G.box(0.45, 8, 0.45), 'q2', '#e11d48', [x, 5, z]);
+      add(() => G.box(14, 0.6, 0.8), 'q3', '#e11d48', [1.5, 9, -0.5]); add(() => G.box(2.4, 1.2, 2), 'q4', '#f1f5f9', [0, 9.6, -0.5]);
+      for (let i = 0; i < 3; i++) add(() => G.box(2.6, 1.15, 1.25), 'icdb', BOXCOLS[(i * 5 + 2) % BOXCOLS.length], [-3 + i * 2.8, 2.2, 2]);
+    }
+    g.kind = kind; g.id = id; g.scl = [1.8, 1.8, 1.8];
+    return g;
+  },
+  curve(L) {
+    const A = [this.P[L.from][0], 1.2, this.P[L.from][1]], B = [this.P[L.to][0], 1.2, this.P[L.to][1]];
+    const d = V3.len(V3.sub(B, A)); const h = clamp(d * (ARCF[L.mode] || 0.15), 3, 24);
+    const C = V3.add(V3.lerp(A, B, 0.5), [0, 2 * h, 0]);
+    const n = 40, pts = [];
+    for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t; pts.push([u * u * A[0] + 2 * u * t * C[0] + t * t * B[0], u * u * A[1] + 2 * u * t * C[1] + t * t * B[1], u * u * A[2] + 2 * u * t * C[2] + t * t * B[2]]); }
+    return { A, B, pts, h, perp: V3.norm([-(B[2] - A[2]), 0, B[0] - A[0]]) };
+  },
+  buildLegs() {
+    // dispose old
+    this.dyn.children.forEach((n) => this.freeTree(n)); this.dyn.clear();
+    const box = this.box;
+    // sea
+    const seas = box.legs.filter((L) => L.mode === 'sea');
+    if (seas.length) {
+      const xs = seas.flatMap((L) => [this.P[L.from][0], this.P[L.to][0]]);
+      const x0 = Math.min(...xs) + 4, x1 = Math.max(...xs) - 4;
+      if (x1 > x0) {
+        const sea = new Batch();
+        sea.add(G.plane(x1 - x0, 420), [(x0 + x1) / 2, 0.03, 0], [0, 0, 0], TH.water);
+        for (const x of [x0, x1]) sea.add(G.box(1.2, 0.08, 420), [x, 0.05, 0], [0, 0, 0], mixc(hex(TH.water), [1, 1, 1], 0.35));
+        for (let i = 0; i < 18; i++) sea.add(G.box(3 + (i % 4), 0.03, 0.25), [x0 + (x1 - x0) * ((i * 0.37) % 1), 0.07, -180 + i * 21], [0, 0, 0], mixc(hex(TH.water), [1, 1, 1], 0.2));
+        this.dyn.add(new Node({ mesh: sea.mesh(), _own: true }));
+      }
+    }
+    box.legs.forEach((L, i) => {
+      const c = this.curve(L); L._c = c; L._i = i;
+      const k = L.strands.length; const mcol = MODES[L.mode].col;
+      const sleeve = new Node({ mesh: R.mesh(G.tube(c.pts, 1.5 + 0.95 * k, 12)), col: mcol, alpha: 0.25, trans: true, _own: true, lit: 0.35, add: true });
+      this.dyn.add(sleeve); L._sleeve = sleeve;
+      L._strand = [];
+      const order = L.strands.slice().sort((a, b) => this.strands.indexOf(a) - this.strands.indexOf(b));
+      order.forEach((s, j) => {
+        const off = (j - (k - 1) / 2) * 1.9; const pts = c.pts.map((p) => V3.add(p, V3.sc(c.perp, off)));
+        let geo;
+        if (L.empty || L.outside) { geo = new Geo(); for (let q = 0; q < pts.length - 2; q += 3) { const g2 = G.tube(pts.slice(q, q + 2), 0.7, 6); geo.p.push(...g2.p); geo.n.push(...g2.n); } }
+        else geo = G.tube(pts, 0.75, 8);
+        const nd = new Node({ mesh: R.mesh(geo), col: this.scol[s], lit: 0.35, _own: true });
+        this.dyn.add(nd); L._strand.push({ s, node: nd, pts });
+      });
+      // tower
+      const mid = V3.lerp(c.A, c.B, 0.5); const H = 2 + L.kg / this.maxKg * 58;
+      const tp = [mid[0], 0, mid[2] - 20];
+      const tw = new Node({ mesh: mesh('tower', () => G.cyl(3, 3, 1, 24)), col: mcol, pos: [tp[0], H / 2, tp[2]], scl: [1, H, 1], alpha: 0.6, trans: true, lit: 0.8 });
+      const cap = new Node({ mesh: mesh('tcap', () => G.cyl(3.3, 3.3, 0.4, 24)), col: mcol, pos: [tp[0], H + 0.2, tp[2]], lit: 0, em: [0.15, 0.15, 0.15] });
+      const base = new Node({ mesh: mesh('tbase', () => G.ring(3.4, 4.8, 32)), col: mcol, pos: [tp[0], 0.1, tp[2]], lit: 0, alpha: 0.6, add: true, trans: true });
+      this.dyn.add(tw); this.dyn.add(cap); this.dyn.add(base); L._tower = tw; L._cap = cap; L._top = [tp[0], H, tp[2]]; L._H = H;
+      // vehicle
+      const v = this.vehicle(L); this.dyn.add(v); L._veh = v; L._len = c.pts.reduce((a, p, q) => (q ? a + V3.len(V3.sub(p, c.pts[q - 1])) : 0), 0);
+    });
+    box.lifts.forEach((F, i) => {
+      const p = this.P[F.node]; const H = 1.5 + F.kg / this.maxKg * 58;
+      const tw = new Node({ mesh: mesh('ltower', () => G.cyl(1.7, 1.7, 1, 16)), col: MODES.lift.col, pos: [p[0] + 14, H / 2, p[1] - 12], scl: [1, H, 1], alpha: 0.75, trans: true, lit: 0.8 });
+      this.dyn.add(tw); F._tower = tw; F._top = [p[0] + 14, H, p[1] - 12]; F._i = i;
+    });
+    this.strandPaths();
+  },
+  vehicle(L) {
+    const g = new Node(); const fc = FLOWS[this.box.flow].col;
+    const cc = L.strands.length === 1 && !L.strands.includes('BOX') && !this.box.lots.some((l) => l.id === L.strands[0] && this.box.lots.length === 1) ? this.scol[L.strands[0]] : fc;
+    if (L.mode === 'road') { g.add(N(mesh('vtc', () => G.box(1.1, 1.3, 1.3)), '#e2e8f0', [1.5, 0.75, 0])); g.add(N(mesh('vtb', () => G.box(2.6, 1.2, 1.3)), L.empty ? '#94a3b8' : cc, [-0.5, 0.8, 0])); }
+    else if (L.mode === 'rail') { g.add(N(mesh('vrl', () => G.box(2.6, 1.3, 1.2)), '#b91c1c', [3.2, 0.7, 0])); for (let i = 0; i < 3; i++) g.add(N(mesh('vrw', () => G.box(2.6, 1.0, 1.2)), i === 0 ? cc : BOXCOLS[i * 3], [0.4 - i * 2.8, 0.6, 0])); }
+    else if (L.mode === 'sea' || L.mode === 'barge') {
+      const s = L.mode === 'sea' ? 1 : 0.6;
+      g.add(N(mesh('hull', () => G.frustum(10, 3.2, 8, 2.2, 1.6)), '#1e293b', [0, 0.4, 0], { scl: [s, s, s] }));
+      for (let i = 0; i < 4; i++) g.add(N(mesh('deckb', () => G.box(1.6, 0.9, 2.6)), i === 1 ? cc : BOXCOLS[(i * 4 + 1) % BOXCOLS.length], [(-2.6 + i * 1.75) * s, 1.6 * s, 0], { scl: [s, s, s] }));
+      g.add(N(mesh('bridge', () => G.box(1.2, 2.2, 2.4)), '#f1f5f9', [-4.2 * s, 2.0 * s, 0], { scl: [s, s, s] }));
+    }
+    g.add(N(mesh('vglow', () => G.ring(2.2, 3, 24)), cc, [0, 0.05, 0], { lit: 0, alpha: 0.5, add: true, trans: true }));
+    g.scl = [1.7, 1.7, 1.7];
+    return g;
+  },
+  strandPaths() {
+    const legs = this.box.legs.filter((L) => !L.outside);
+    this.paths = this.strands.map((s) => {
+      const mine = legs.filter((L) => L.strands.includes(s)); if (!mine.length) return null;
+      let cur = mine.find((L) => !mine.some((M) => M.to === L.from)); const seq = [];
+      while (cur) { seq.push(cur); const nx = mine.find((M) => M.from === cur.to); cur = nx; if (seq.length > 20) break; }
+      const pts = [], segs = []; let acc = 0;
+      seq.forEach((L) => { const st = L._strand.find((q) => q.s === s); const P = st.pts; const a0 = acc; P.forEach((p, i) => { if (pts.length) acc += V3.len(V3.sub(p, pts[pts.length - 1])); pts.push(p); }); segs.push({ L, a0, a1: acc, from: L.from, to: L.to }); });
+      return { s, pts, segs, len: acc, cum: pts.reduce((a, p, i) => { a.push(i ? a[i - 1] + V3.len(V3.sub(p, pts[i - 1])) : 0); return a; }, []) };
+    }).filter(Boolean);
+  },
+  posOn(path, d) { d = clamp(d, 0, path.len); const c = path.cum; let i = 1; while (i < c.length - 1 && c[i] < d) i++; const k = (d - c[i - 1]) / ((c[i] - c[i - 1]) || 1); return V3.lerp(path.pts[i - 1], path.pts[i], clamp(k, 0, 1)); },
+  makeLabels() {
+    clearLabels('journey');
+    const b = this.box;
+    this.ids.forEach((id) => { const n = b.nodes[id]; const ic = this.icons[id]; label(`<b>${n.name}</b><span>${n.sub}</span>`, () => [ic.pos[0], 24, ic.pos[2]], 'nlbl k-' + n.kind, { scene: 'journey', fade: [300, 900] }); });
+    b.legs.forEach((L) => {
+      L._lbl = label(`<b>${kg(L.kg)}</b><span>${MODES[L.mode].name} · ${int(L.km)} km${L.outside ? ' · not counted' : ''}</span>`, () => [L._top[0], L._top[1] + 3, L._top[2]], 'tlbl', { scene: 'journey', show: false, fade: [300, 900] });
+      L._lbl.el.style.borderColor = MODES[L.mode].col;
+    });
+  },
+  // ---------- trace ----------
+  startTrace() {
+    this.trace = { D: 0, v: 72, burst: new Set() };
+    this.pulses = this.paths.map((p) => { const n = N(mesh('pulse3', () => G.sphere(3, 14)), this.scol[p.s], [0, 0, 0], { lit: 0, add: true, trans: true, alpha: 0.95 }); this.root.add(n); return n; });
+    for (const k in this.reveal) this.reveal[k] = 0;
+    CAM.follow = () => { const act = this.paths.map((p, i) => [p, this.pulses[i]]).filter(([p]) => this.trace && this.trace.D < p.len + 5); if (!act.length) return null; const c = act.reduce((a, [, n]) => V3.add(a, n.pos), [0, 0, 0]); return V3.sc(c, 1 / act.length); };
+    CAM.followK = 0.06;
+    camTo({ pitch: 0.95, dist: 290, yaw: -0.1, fov: 0.75 }, 1.6);
+    App.traceStarted();
+  },
+  endTrace() {
+    if (this.pulses) this.pulses.forEach((n) => this.root.remove(n)); this.pulses = null;
+    this.trace = null; this.traced = true; CAM.follow = null;
+    for (const k in this.reveal) this.reveal[k] = 1;
+    this.overview(1.8);
+    App.traceDone();
+  },
+  overview(d = 1.6) {
+    const xs = Object.values(this.P).map((p) => p[0]), zs = Object.values(this.P).map((p) => p[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cz = (Math.min(...zs) + Math.max(...zs)) / 2;
+    const span = Math.max(Math.max(...xs) - Math.min(...xs), (Math.max(...zs) - Math.min(...zs)) * 1.6);
+    const asp = CAM.w / CAM.h; const dist = span * 1.0 / Math.tan(0.75 / 2) / Math.min(asp, 1.9) + 60;
+    return camTo({ target: [cx + 4, 0, cz - 10], yaw: 0.14, pitch: 0.9, dist: clamp(dist, 260, 620), fov: 0.75 }, d);
+  },
+  setMode(m) {
+    if (m === this.mode) return; this.mode = m;
+    const from = JSON.parse(JSON.stringify(this.P)), to = this.layout(m);
+    this.morph = { t: 0, from, to };
+  },
+  // ---------- frame ----------
+  update(dt, t) {
+    const b = this.box; if (!b) return;
+    if (this.morph) {
+      const M = this.morph; M.t += dt; const k = ease(clamp(M.t / 1.3, 0, 1));
+      for (const id in this.P) { this.P[id] = [M.from[id][0] + (M.to[id][0] - M.from[id][0]) * k, M.from[id][1] + (M.to[id][1] - M.from[id][1]) * k]; this.icons[id].pos = [this.P[id][0], 0, this.P[id][1]]; }
+      this.buildLegs();
+      if (M.t >= 1.3) { this.morph = null; this.overview(1.2); }
+    }
+    if (this.trace) {
+      const T = this.trace; T.D += T.v * dt;
+      let alive = false;
+      this.paths.forEach((p, i) => {
+        const d = p.len - T.D; const n = this.pulses[i];
+        if (d > -1) alive = true;
+        n.pos = this.posOn(p, Math.max(0, d)); n.alpha = d > -6 ? 0.95 : Math.max(0, n.alpha - dt * 2);
+        if (d > 0 && rnd() < 0.7) emit(n.pos, { v: [(rnd() - 0.5) * 3, 1 + rnd() * 2, (rnd() - 0.5) * 3], max: 1.2, s0: 6, s1: 1, c: hex(this.scol[p.s]), a0: 0.8, a1: 0 });
+        for (const sg of p.segs) {
+          const cov = clamp((T.D - (p.len - sg.a1)) / ((sg.a1 - sg.a0) || 1), 0, 1);
+          const li = sg.L._i; this.reveal[li] = Math.max(this.reveal[li], cov);
+          if (cov >= 1 && !T.burst.has(sg.from)) { T.burst.add(sg.from); this.burst(sg.from); }
+        }
+      });
+      b.lifts.forEach((F, i) => { const P = this.P[F.node]; const near = this.pulses.some((n) => Math.hypot(n.pos[0] - P[0], n.pos[2] - P[1]) < 8); if (near) this.reveal['f' + i] = 1; });
+      if (!T.burst.has('_end')) { T.burst.add('_end'); const last = b.legs.filter((L) => !L.outside).slice(-1)[0]; this.burst(last.to); }
+      if (!alive || T.D > Math.max(...this.paths.map((p) => p.len)) + 10) this.endTrace();
+    }
+    const sel = App.sel, hov = App.hover;
+    b.legs.forEach((L, i) => {
+      const rv = L.outside ? (this.traced ? 0.6 : 0.15) : this.reveal[i];
+      const dim = this.lot && !L.strands.includes(this.lot) && !(L.strands.includes('BOX')) ? 0.25 : 1;
+      const isH = (hov && hov.leg === L) || (sel && sel.leg === L);
+      L._sleeve.alpha = (0.06 + rv * 0.22 + (isH ? 0.3 : 0)) * dim; L._sleeve.em = isH ? [0.25, 0.25, 0.25] : [0, 0, 0];
+      L._strand.forEach((q) => { const a = (0.12 + rv * 0.88) * (this.lot && q.s !== this.lot && q.s !== 'BOX' ? 0.18 : 1); q.node.alpha = a; q.node.trans = a < 0.99; const c = hex(this.scol[q.s]); const e = isH ? 0.35 : 0.12; q.node.em = [c[0] * e, c[1] * e, c[2] * e]; });
+      const tv = rv > 0.95 ? 1 : 0; L._tower.alpha = (0.55 * tv + (isH ? 0.3 : 0)) * dim; L._cap.visible = tv > 0; L._tower.visible = tv > 0;
+      L._lbl.show = tv > 0 && dim > 0.5; L._lbl.el.classList.toggle('on', !!isH);
+      // vehicle
+      const v = L._veh; v.visible = rv > 0.95 && dim > 0.5;
+      if (v.visible) {
+        const per = clamp(L._len / 14, 3, 12); const u = ((t / per) + i * 0.37) % 1;
+        const pts = L._c.pts, fi = u * (pts.length - 1), a = Math.floor(fi), q = fi - a; const p0 = pts[a], p1 = pts[Math.min(a + 1, pts.length - 1)];
+        v.pos = V3.lerp(p0, p1, q); v.pos[1] += 0.5;
+        const d = V3.sub(p1, p0); v.rot = [0, Math.atan2(-d[2], d[0]), Math.atan2(d[1], Math.hypot(d[0], d[2]))];
+      }
+    });
+    b.lifts.forEach((F, i) => { const rv = this.reveal['f' + i]; F._tower.visible = rv > 0.5; F._tower.alpha = 0.75; F._tower.em = hov && hov.lift === F ? [0.3, 0.3, 0.3] : [0, 0, 0]; });
+    for (const id in this.icons) { const g = this.icons[id]; const r = g.children[1]; r.alpha = (0.25 + 0.2 * Math.sin(t * 2 + id.length)) * TH.glow + 0.1; const isH = hov && hov.node === id; g.children[0].em = isH ? [0.2, 0.2, 0.25] : [0, 0, 0]; }
+    if (this.bursts) this.bursts = this.bursts.filter((p) => { p.t += dt; const s = 12 + p.t * 30; p.n.scl = [s, 1, s]; p.n.alpha = Math.max(0, 0.9 - p.t * 0.8); if (p.t > 1.2) { this.root.remove(p.n); return false; } return true; });
+  },
+  burst(id) {
+    const P = this.P[id]; if (!P) return;
+    const n = N(mesh('pulse', () => G.ring(0.9, 1, 48)), '#ffffff', [P[0], 0.7, P[1]], { lit: 0, alpha: 0.9, add: true, trans: true, scl: [12, 1, 12] });
+    this.root.add(n); (this.bursts = this.bursts || []).push({ n, t: 0 });
+    for (let i = 0; i < 24; i++) emit([P[0], 3, P[1]], { v: [(rnd() - 0.5) * 18, 4 + rnd() * 8, (rnd() - 0.5) * 18], g: -10, max: 1.4, s0: 5, s1: 1, c: [0.6, 0.85, 1], a0: 0.9, a1: 0 });
+  },
+  pick(ray, mx, my) {
+    let best = null, bd = 1e9;
+    for (const id of this.ids) { const ic = this.icons[id]; const p = project([ic.pos[0], 4, ic.pos[2]]); if (!p) continue; const d = Math.hypot(p[0] - mx, p[1] - my); const r = clamp(5000 / p[2], 16, 46); if (d < r && d < bd) { bd = d; best = { node: id }; } }
+    if (best) return best;
+    for (const L of this.box.legs) {
+      if (L._tower.visible) { const t = rayBox(ray, L._tower, [0, 0, 0], [3.2, 0.5, 3.2]); if (t !== null) return { leg: L }; }
+      const pts = L._c.pts; let prev = null;
+      for (let i = 0; i < pts.length; i += 2) { const p = project(pts[i]); if (p && prev) { const d = segDist(mx, my, prev[0], prev[1], p[0], p[1]); if (d < 14 && d < bd) { bd = d; best = { leg: L }; } } prev = p; }
+    }
+    if (best) return best;
+    for (const F of this.box.lifts) if (F._tower.visible) { const t = rayBox(ray, F._tower, [0, 0, 0], [2, 0.5, 2]); if (t !== null) return { lift: F }; }
+    return null;
+  },
+  freeTree(n) { if (n._own && n.mesh) R.free(n.mesh); n.children.forEach((c) => this.freeTree(c)); },
+  dispose() {
+    if (this.dyn) { this.dyn.children.forEach((n) => this.freeTree(n)); }
+    if (this.ground) R.free(this.ground.mesh);
+    this.root.clear(); clearLabels('journey'); this.pulses = null; this.trace = null; this.bursts = [];
+  },
+};
+function segDist(px, py, ax, ay, bx, by) { const dx = bx - ax, dy = by - ay; const l = dx * dx + dy * dy; let t = l ? ((px - ax) * dx + (py - ay) * dy) / l : 0; t = clamp(t, 0, 1); return Math.hypot(px - ax - t * dx, py - ay - t * dy); }
+
+// ================= APP / UI =================
+const PORTAL_URL = (new URLSearchParams(location.search)).get('portal') || './index.html';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+const SRC_COL = { AIS: '#60a5fa', FOIS: '#4ade80', 'Carrier API': '#38bdf8', ULIP: '#fb923c', 'E-way bill': '#facc15', TRACE: '#a78bfa', SAP: '#f472b6', 'Gate-in': '#38bdf8', 'Gate-out': '#f59e0b' };
+const App = {
+  scene: null, colorMode: 'flow', hover: null, sel: null, lotSel: null, idle: 0, paused: false, tour: null, box: null, jbox: null, t: 0, feedItems: [], mouse: null,
+  init() {
+    const cv = $('#cv'); this.cv = cv;
+    try { R.init(cv); } catch (e) { $('#err').style.display = 'grid'; console.error(e); return; }
+    LABELS.root = $('#labels');
+    this.resize(); addEventListener('resize', () => this.resize());
+    Plant.init();
+    this.scene = Plant; Plant.enter();
+    CAM.target = [10, 0, 10]; CAM.yaw = 0.42; CAM.pitch = 0.62; CAM.dist = 330; CAM.fov = 0.72;
+    this.plantCam = null;
+    this.bindInput();
+    this.renderPlantUI(); this.crumb();
+    if (location.protocol.startsWith('http')) { const a = $('#bPortal'); a.href = PORTAL_URL; a.style.display = ''; }
+    $('#bTour').onclick = () => (this.tour ? this.stopTour() : this.playTour());
+    $('#bPause').onclick = () => this.togglePause();
+    $('#bTheme').onclick = () => this.toggleTheme();
+    $('#bHelp').onclick = () => this.help(true);
+    $('#bFull').onclick = () => this.fullscreen();
+    camTo({ target: [10, 0, 0], yaw: 0.55, pitch: 0.58, dist: 290 }, 3.5);
+    this.sysEventT = 3;
+    requestAnimationFrame((ts) => { this.last = ts; this.loop(ts); });
+  },
+  resize() {
+    const d = Math.min(devicePixelRatio || 1, 2); this.cv.width = innerWidth * d; this.cv.height = innerHeight * d;
+    CAM.w = innerWidth; CAM.h = innerHeight; R.gl.viewport(0, 0, this.cv.width, this.cv.height);
+  },
+  loop(ts) {
+    const dt = Math.min(this.fastTest ? 0.4 : 0.05, (ts - this.last) / 1000 || 0.016); this.last = ts; this.t += dt; this.idle += dt;
+    tickTweens(dt);
+    if (this.scene === Plant) { Plant.update(dt, this.t); this.sysEvents(dt); }
+    else this.scene.update(dt, this.t);
+    stepParts(dt);
+    camUpdate();
+    render(this.scene.root, this.scene === Plant ? 1 : this.scene === BoxView ? 3 : 0.55);
+    updateLabels(this.scene.name);
+    if (this.mouse && !this.dragging && !this.tour) { const h = this.scene.pick(rayAt(this.mouse.x, this.mouse.y), this.mouse.x, this.mouse.y); this.setHover(h); }
+    if (this.forceTip) { const tr = this.forceTip; const p = project([tr.node.pos[0], 4, tr.node.pos[2]]); if (p) this.showTip({ truck: tr, box: tr.box }, p[0] + 30, p[1] - 40); }
+    else if (this.hover && this.mouse) this.placeTip(this.mouse.x, this.mouse.y);
+    requestAnimationFrame((t) => this.loop(t));
+  },
+  // ---------- input ----------
+  bindInput() {
+    const cv = this.cv;
+    cv.addEventListener('contextmenu', (e) => e.preventDefault());
+    cv.addEventListener('pointerdown', (e) => { this.idle = 0; this.userStop(); this.down = { x: e.clientX, y: e.clientY, b: e.button, shift: e.shiftKey, m: 0 }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', (e) => {
+      this.mouse = { x: e.clientX, y: e.clientY }; this.idle = 0;
+      const d = this.down; if (!d) return;
+      const dx = e.clientX - d.x, dy = e.clientY - d.y; d.x = e.clientX; d.y = e.clientY; d.m += Math.abs(dx) + Math.abs(dy);
+      if (d.m > 4) {
+        this.dragging = true; cv.classList.add('drag'); CAM._tw = (CAM._tw || 0) + 1;
+        if (d.b === 2 || d.shift) { const s = CAM.dist * 0.0016; const r = [Math.cos(CAM.yaw), 0, -Math.sin(CAM.yaw)], f = [-Math.sin(CAM.yaw), 0, -Math.cos(CAM.yaw)]; CAM.follow = null; CAM.target = V3.add(CAM.target, V3.add(V3.sc(r, -dx * s), V3.sc(f, dy * s))); }
+        else { CAM.yaw -= dx * 0.006; CAM.pitch = clamp(CAM.pitch + dy * 0.005, CAM.minP, CAM.maxP); }
+      }
+    });
+    cv.addEventListener('pointerup', (e) => { const d = this.down; this.down = null; this.dragging = false; cv.classList.remove('drag'); if (d && d.m < 5) this.click(); });
+    cv.addEventListener('pointerleave', () => { this.mouse = null; if (!this.forceTip) this.setHover(null); });
+    cv.addEventListener('wheel', (e) => { e.preventDefault(); this.idle = 0; this.userStop(); CAM._tw = (CAM._tw || 0) + 1; CAM.dist = clamp(CAM.dist * Math.exp(e.deltaY * 0.0012), CAM.minD, CAM.maxD); }, { passive: false });
+    addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return; this.idle = 0;
+      const k = e.key.toLowerCase();
+      if (k === 'p') { this.tour ? this.stopTour() : this.playTour(); return; }
+      if (this.tour && !['f'].includes(k)) this.stopTour();
+      if (k >= '1' && k <= '4') this.jumpFeatured(+k);
+      else if (k === 'escape') this.back();
+      else if (k === 'enter') this.next();
+      else if (k === ' ') { e.preventDefault(); this.togglePause(); }
+      else if (k === 't') this.toggleTheme();
+      else if (k === 'f') this.fullscreen();
+      else if (k === 'h' || k === '?') this.help($('#help').style.display !== 'grid');
+      else if (k === 'd' && this.scene === Journey) { const m = ['balanced', 'distance', 'co2']; this.setLegMode(m[(m.indexOf(Journey.mode) + 1) % 3]); }
+      else if (k === 'r' && this.scene === Journey) this.replay();
+      else if (k === 'v') document.body.classList.toggle('clean');
+    });
+  },
+  userStop() { if (this.tour) this.stopTour(); },
+  click() {
+    const h = this.hover;
+    if (this.scene === Plant) { if (h && h.box) this.openBox(h.box, h.truck, h.wagon); }
+    else if (this.scene === BoxView) { if (h && h.lot) { this.lotSel = this.lotSel === h.lot ? null : h.lot; this.renderBoxUI(); } else { this.lotSel = null; this.renderBoxUI(); } }
+    else if (this.scene === Journey) { this.sel = h ? h : null; this.renderJourneyRight(); }
+  },
+  setHover(h) {
+    const same = (a, b) => a === b || (a && b && a.truck === b.truck && a.wagon === b.wagon && a.fac === b.fac && a.lot === b.lot && a.leg === b.leg && a.node === b.node && a.lift === b.lift);
+    if (same(h, this.hover)) return;
+    this.hover = h;
+    this.cv.classList.toggle('hand', !!(h && (h.box || h.lot || h.leg || h.node || h.lift)));
+    if (!h) { $('#tip').style.display = 'none'; return; }
+    if (this.mouse) this.showTip(h, this.mouse.x, this.mouse.y);
+  },
+  // ---------- tooltip ----------
+  showTip(h, x, y) {
+    const tip = $('#tip'); let html = '';
+    if (h.box && this.scene === Plant) html = this.boxCard(h.box, h.truck, h.wagon);
+    else if (h.fac) html = `<b style="font-size:13.5px">${esc(h.fac.name)}</b><div class="hint" style="margin-top:4px">${esc(h.fac.desc)}</div>`;
+    else if (h.lot) { const l = h.lot; html = `<div class="h" style="margin:0 0 4px">${l.id} · ${esc(l.cat)}</div><b style="font-size:14px">${esc(l.name)}</b><div class="hint">${esc(l.supplier || l.place)} · HS ${l.hs} · ${l.po}</div><div class="split"><div><span>Own legs</span><b>${kg(l.own)}</b></div><div><span>Shared</span><b>${kg(l.shared)}</b></div><div><span>Total</span><b>${kg(l.kg)}</b></div></div><div class="hint" style="margin-top:6px">${l.t.toFixed(1)} t · ${l.kgt.toFixed(1)} kg CO₂ per tonne · click to pin</div>`; }
+    else if (h.leg) { const L = h.leg, b = Journey.box; html = `<span class="chip" style="background:${MODES[L.mode].col}">${MODES[L.mode].name}</span><span class="dq" style="background:${DQ[L.dq].col}">${DQ[L.dq].tag}</span><div style="margin-top:6px"><b>${esc(b.nodes[L.from].name)} → ${esc(b.nodes[L.to].name)}</b></div><div class="hint">${int(L.km)} km · ${esc(L.vehicle || '')}</div><div class="big" style="font-size:20px;margin-top:4px">${kg(L.kg)}<small>CO₂e${L.outside ? ' · not counted' : ''}</small></div><div class="hint">Click for the data trail</div>`; }
+    else if (h.node) { const n = Journey.box.nodes[h.node]; const lf = Journey.box.lifts.filter((F) => F.node === h.node); html = `<b style="font-size:13.5px">${esc(n.name)}</b><div class="hint">${esc(n.sub)}</div>${lf.map((F) => `<div class="row"><span>${esc(F.label)}</span><span>${kg(F.kg)}</span></div>`).join('')}`; }
+    else if (h.lift) { const F = h.lift; html = `<span class="chip" style="background:#64748b">Handling</span><div style="margin-top:6px"><b>${esc(F.label)}</b></div><div class="hint">${F.moves} lift${F.moves > 1 ? 's' : ''} × 10 kg · ${esc(F.dqSrc || '')}</div><div class="big" style="font-size:20px">${kg(F.kg)}</div>`; }
+    if (!html) { tip.style.display = 'none'; return; }
+    tip.innerHTML = html; tip.style.display = 'block'; this.placeTip(x, y);
+  },
+  placeTip(x, y) { const tip = $('#tip'); const w = tip.offsetWidth, h = tip.offsetHeight; let X = x + 18, Y = y + 16; if (X + w > innerWidth - 10) X = x - w - 18; if (Y + h > innerHeight - 10) Y = innerHeight - h - 10; tip.style.left = X + 'px'; tip.style.top = Y + 'px'; },
+  status(b, tr) {
+    if (!tr) return b.status || '';
+    const g = tr.path.stops.gate;
+    if (tr.inbound) { if (!tr.gateDone && tr.s < g - 1) return 'Arriving at Gate 3'; if (!tr.gateDone) return 'At Gate 3: matching e-way bill + FASTag'; return 'In yard: to de-stuffing bay'; }
+    const first = b.legs.find((L) => L.from === 'cy' && !L.strands.includes('BOX')); const nx = first ? b.nodes[first.to].name : 'port';
+    return tr.gateDone ? 'Departed: truck to ' + nx : 'Leaving yard for Gate 3';
+  },
+  boxCard(b, tr, wg) {
+    const f = FLOWS[b.flow];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="id mono">${fmtId(b.id)}</span><span class="chip" style="background:${f.col}">${f.label}</span></div>
+      <div class="hint" style="margin-top:2px">${esc(b.lane)} · ${b.lots.length} lot${b.lots.length > 1 ? 's' : ''} · ${b.mass.toFixed(1)} t</div>
+      <div class="lots">${b.lots.map((l) => `<div class="lotrow"><i style="background:${l.color}"></i><span>${esc(l.name)}</span><span class="mini">${l.t.toFixed(1)} t</span></div>`).join('')}</div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div class="big">${kg(b.total)}<small>CO₂e door to door</small></div></div>
+      <div class="hint">${b.kgt.toFixed(1)} kg per tonne · ${Math.round(b.l12 * 100)}% on measured / trip data</div>
+      <div class="hint" style="margin-top:6px;color:var(--acc)">● ${esc(this.status(b, tr) || b.status || '')}</div>
+      <div class="hint" style="margin-top:2px">Click to open the box ↗</div>`;
+  },
+  // ---------- navigation ----------
+  crumb() {
+    const c = $('#crumb'); const parts = [['Jamshedpur Works', () => this.toPlant(), this.scene === Plant]];
+    if (this.box) parts.push([fmtId(this.box.id), () => this.toBox(), this.scene === BoxView]);
+    if (this.box && this.scene === Journey) parts.push(['Journey', null, true]);
+    c.innerHTML = ''; parts.forEach(([t, fn, cur], i) => { if (i) { const s = document.createElement('i'); s.textContent = '›'; c.appendChild(s); } const a = document.createElement('a'); a.textContent = t; if (cur) a.className = 'cur'; if (fn) a.onclick = fn; c.appendChild(a); });
+  },
+  fade(on, d = 0.25) { const f = $('#fade'); f.style.transition = `opacity ${d}s`; f.style.opacity = on ? 1 : 0; return new Promise((r) => setTimeout(r, d * 1000)); },
+  setScene(s) { this.scene = s; this.hover = null; this.sel = null; $('#tip').style.display = 'none'; PARTS.list.length = 0; this.forceTip = null; this.crumb(); },
+  async openBox(b, tr, wg) {
+    if (this.busy) return; this.busy = true;
+    this.plantCam = { target: CAM.target.slice(), yaw: CAM.yaw, pitch: CAM.pitch, dist: CAM.dist, fov: CAM.fov };
+    this.forceTip = null; $('#tip').style.display = 'none';
+    if (tr) { tr.held = true; this.heldTruck = tr; }
+    const node = tr ? tr.node : wg.node.parent;
+    const pos = tr ? [tr.node.pos[0], 2, tr.node.pos[2]] : [wg.node.parent.pos[0] + wg.node.pos[0], 2.5, wg.node.parent.pos[2]];
+    const yaw = tr ? tr.yaw + Math.PI / 2 : 0;
+    await camTo({ target: pos, yaw, pitch: 1.32, dist: 20, fov: 0.62 }, 1.5);
+    await this.fade(true, 0.22);
+    this.box = b; this.lotSel = null;
+    BoxView.enter(b, true); this.setScene(BoxView);
+    this.renderBoxUI();
+    await this.fade(false, 0.4);
+    this.busy = false;
+  },
+  boxOpened() { this.renderBoxUI(); },
+  async toBox() {
+    if (!this.box || this.busy) return; this.busy = true;
+    await this.fade(true, 0.22);
+    Journey.dispose(); this.jbox = null;
+    BoxView.enter(this.box, true); this.setScene(BoxView); this.renderBoxUI();
+    await this.fade(false, 0.35); this.busy = false;
+  },
+  async toPlant() {
+    if (this.scene === Plant || this.busy) return; this.busy = true;
+    await this.fade(true, 0.22);
+    BoxView.dispose(); Journey.dispose(); this.jbox = null;
+    if (this.heldTruck) { this.heldTruck.held = false; this.heldTruck = null; }
+    this.box = null; this.setScene(Plant); Plant.enter();
+    const pc = this.plantCam || { target: [10, 0, 0], yaw: 0.55, pitch: 0.58, dist: 290, fov: 0.72 };
+    CAM.target = pc.target; CAM.yaw = pc.yaw; CAM.pitch = 1.2; CAM.dist = pc.dist * 0.6; CAM.fov = pc.fov;
+    camTo({ pitch: pc.pitch, dist: Math.max(pc.dist, 160) }, 1.4);
+    this.renderPlantUI();
+    await this.fade(false, 0.4); this.busy = false;
+  },
+  async toJourney(b) {
+    if (this.busy) return; this.busy = true;
+    b = b || this.box;
+    await this.fade(true, 0.25);
+    BoxView.dispose();
+    Journey.mode = 'balanced'; Journey.lot = null; Journey.build(b); this.jbox = b;
+    this.setScene(Journey); CAM.minD = 30; CAM.maxD = 900; CAM.minP = 0.15; CAM.maxP = 1.5;
+    const P = Journey.P; const dst = b.legs.filter((L) => !L.outside).slice(-1)[0].to;
+    CAM.target = [P[dst][0], 0, P[dst][1]]; CAM.yaw = -0.4; CAM.pitch = 0.75; CAM.dist = 150; CAM.fov = 0.75; CAM.follow = null;
+    this.renderJourneyUI();
+    await this.fade(false, 0.4);
+    setTimeout(() => Journey.startTrace(), 500);
+    this.busy = false;
+  },
+  back() { if (this.scene === Journey) this.toBox(); else if (this.scene === BoxView) this.toPlant(); else if ($('#help').style.display === 'grid') this.help(false); },
+  next() { if (this.scene === Plant) this.jumpFeatured(1); else if (this.scene === BoxView) this.toJourney(); },
+  jumpFeatured(n) {
+    if (this.busy) return;
+    if (this.scene !== Plant) { this.toPlant().then(() => setTimeout(() => this.jumpFeatured(n), 400)); return; }
+    const tr = Plant.bringFeatured(n); if (!tr) return;
+    this.openBox(tr.box, tr);
+  },
+  replay() { if (this.scene !== Journey || Journey.trace) return; Journey.startTrace(); },
+  traceStarted() { this.renderJourneyRight(); },
+  traceDone() { this.renderJourneyRight(); this.renderTimeline(); },
+  setLegMode(m) { Journey.setMode(m); this.renderJourneyRight(); },
+  async showOption(key) {
+    const b = key === this.box.option ? this.box : rebuild(this.box, key);
+    this.jbox = b; const mode = Journey.mode; Journey.mode = 'balanced'; Journey.build(b); Journey.mode = mode; if (mode !== 'balanced') { Journey.P = Journey.layout(mode); for (const id in Journey.icons) Journey.icons[id].pos = [Journey.P[id][0], 0, Journey.P[id][1]]; Journey.buildLegs(); }
+    Journey.traced = true; for (const k in Journey.reveal) Journey.reveal[k] = 1;
+    Journey.overview(1.2); this.sel = null;
+    this.renderJourneyUI();
+  },
+  togglePause() { this.paused = !this.paused; $('#bPause').classList.toggle('on', this.paused); $('#bPause').textContent = this.paused ? '▶' : '❚❚'; },
+  toggleTheme() {
+    const day = TH === THEMES.night; TH = day ? THEMES.day : THEMES.night; document.body.classList.toggle('day', day); $('#bTheme').textContent = day ? '☾ Dark' : '☀ Light';
+    Plant.buildStatic();
+    if (this.scene === BoxView) { const st = BoxView.state; BoxView.build(this.box); BoxView.state = 'opening'; BoxView.tOpen = 3.5; }
+    if (this.scene === Journey) { const tr = Journey.traced; const m = Journey.mode; Journey.mode = 'balanced'; Journey.build(this.jbox); if (m !== 'balanced') { Journey.mode = m; Journey.P = Journey.layout(m); for (const id in Journey.icons) Journey.icons[id].pos = [Journey.P[id][0], 0, Journey.P[id][1]]; Journey.buildLegs(); } Journey.traced = true; for (const k in Journey.reveal) Journey.reveal[k] = 1; }
+  },
+  fullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); else document.exitFullscreen && document.exitFullscreen(); },
+  help(on) { $('#help').style.display = on ? 'grid' : 'none'; },
+  // ---------- plant UI ----------
+  renderPlantUI() {
+    $('#left').style.display = ''; $('#right').style.display = ''; $('#bottom').style.display = '';
+    const F = Plant.feat;
+    $('#left').innerHTML = `<div class="h">Featured boxes · press 1–4</div>${F.map((b, i) => `<div class="fcard" data-n="${i + 1}"><div class="num" style="background:${FLOWS[b.flow].col}">${i + 1}</div><div><b>${esc(b.hero)}</b><span>${esc(b.lane)} · <span class="mono">${fmtId(b.id)}</span></span><em>${kg(b.total)} CO₂e · ${esc(b.tag)}</em></div></div>`).join('')}
+      <div class="h2">Colour boxes by</div><div class="seg" id="cm"><button data-m="flow">Flow</button><button data-m="co2">CO₂ per tonne</button><button data-m="dq">Data quality</button></div>
+      <div class="leg" id="cmleg"></div>
+      <div class="note">Every truck and rail box is a live record. Hover for its card, click to open it. Bulk rakes and stockyards are outside container scope.</div>`;
+    $('#left').querySelectorAll('.fcard').forEach((el) => { el.onclick = () => this.jumpFeatured(+el.dataset.n); });
+    $('#cm').querySelectorAll('button').forEach((bt) => { bt.classList.toggle('on', bt.dataset.m === this.colorMode); bt.onclick = () => { this.colorMode = bt.dataset.m; Plant.repaintAll(); this.renderPlantUI(); }; });
+    const L = { flow: Object.values(FLOWS).map((f) => `<span><i class="dot" style="background:${f.col}"></i>${f.label}</span>`).join(''), co2: '<span><i class="dot" style="background:#22c55e"></i>≤20 kg/t</span><span><i class="dot" style="background:#eab308"></i>50</span><span><i class="dot" style="background:#ef4444"></i>≥80 kg/t</span>', dq: '<span><i class="dot" style="background:#64748b"></i>Mostly default factors</span><span><i class="dot" style="background:#22c55e"></i>Measured / trip data</span>' };
+    $('#cmleg').innerHTML = L[this.colorMode];
+    $('#right').innerHTML = `<div class="h">Jamshedpur · Sep 2027 (sample month)</div>
+      <div class="kpis"><div class="kpi"><b>2,375</b><span>containers</span></div><div class="kpi"><b>2,576 t</b><span>CO₂e, door to door</span></div><div class="kpi"><b>1,085 kg</b><span>CO₂e per TEU</span></div><div class="kpi"><b>41%</b><span>on measured or trip data</span></div></div>
+      <div class="h2">Live TRACE events</div><div class="feed" id="feed"></div>`;
+    this.renderFeed();
+    $('#bottom').style.width = '';
+    $('#bottom').innerHTML = `<span class="hint"><b>Drag</b> to orbit · <b>scroll</b> to zoom · <b>hover</b> a truck · <b>click</b> to open · <kbd>P</kbd> plays the story</span>`;
+  },
+  feed(time, kind, txt, flow) {
+    this.feedItems.unshift({ time, kind, txt, col: SRC_COL[kind] || (flow ? FLOWS[flow].col : '#38bdf8') });
+    this.feedItems = this.feedItems.slice(0, 7);
+    if (this.scene === Plant) this.renderFeed();
+  },
+  renderFeed() { const f = $('#feed'); if (!f) return; f.innerHTML = this.feedItems.map((e) => `<div class="fe" style="border-left-color:${e.col}"><span class="t mono">${e.time}</span><span><b>${esc(e.kind)}</b> · ${esc(e.txt)}</span></div>`).join(''); },
+  sysEvents(dt) {
+    if (this.paused) return;
+    this.sysEventT -= dt; if (this.sysEventT > 0) return; this.sysEventT = 6 + rnd() * 5;
+    const E = [['AIS', 'Carrier D vessel berthed at Haldia · 312 boxes re-estimated'], ['FOIS', 'Rake left Tatanagar ICD · 84 TEU × 250 km · 6.3 t CO₂e'], ['Carrier API', 'Carrier A voyage report: 55.0 g/TEU-km replaces the default on 41 boxes'], ['ULIP', 'FASTag trip closed · Haldia → plant · 252 km · 413 kg'], ['E-way bill', 'Ludhiana → Jamshedpur box linked · rail leg waiting for FOIS'], ['TRACE', 'Box record upgraded L3 → L2 (supplier ASN received)'], ['SAP', 'Delivery created · 2 lots consolidated in one box'], ['TRACE', 'Alert: Carrier C on-time 71%, below the 80% bar']];
+    const e = pick(E); Plant.pushFeed(e[0], e[1]);
+  },
+  // ---------- box UI ----------
+  renderBoxUI() {
+    const b = this.box; if (!b) return;
+    $('#left').style.display = ''; $('#right').style.display = ''; $('#bottom').style.display = '';
+    const sel = this.lotSel;
+    $('#left').innerHTML = `<div class="h">${b.lots.length} lot${b.lots.length > 1 ? 's' : ''} in this box · click to pin</div>${b.lots.map((l) => `<div class="lotc ${sel === l ? 'on' : ''}" data-id="${l.id}" style="border-left-color:${l.color}"><div style="display:flex;justify-content:space-between"><b>${l.id} · ${esc(l.name)}</b><span class="mini">${l.t.toFixed(1)} t</span></div><div class="s">${esc(l.cat)} · HS ${l.hs}</div><div class="s">${esc(l.supplier || l.place)} · ${l.po}</div><div class="split"><div>Own legs<b>${kg(l.own)}</b></div><div>Shared<b>${kg(l.shared)}</b></div><div>Per tonne<b>${l.kgt.toFixed(1)} kg</b></div></div></div>`).join('')}
+      <div class="note"><b>How the box is split:</b> legs a lot travels alone are its own. Shared legs and lifts are split by mass (ISO 14083 / GLEC). ${esc(b.note)}</div>`;
+    $('#left').querySelectorAll('.lotc').forEach((el) => { const l = b.lots.find((x) => x.id === el.dataset.id); el.onmouseenter = () => { this.hover = { lot: l }; }; el.onmouseleave = () => { this.hover = null; }; el.onclick = () => { this.lotSel = this.lotSel === l ? null : l; this.renderBoxUI(); }; });
+    const f = FLOWS[b.flow];
+    const modeRows = ['sea', 'rail', 'road', 'barge', 'lift'].filter((m) => b.byMode[m] > 0).map((m) => { const dkm = m === 'lift' ? '—' : Math.round(b.km[m] / b.kmTot * 100) + '%'; return `<div class="row"><span><i class="dot" style="background:${MODES[m].col}"></i>${MODES[m].name}</span><span>${kg(b.byMode[m])} · <b>${Math.round(b.byMode[m] / b.total * 100)}%</b> of CO₂ · ${dkm} of km</span></div>`; }).join('');
+    const opt = b.optSet[b.option];
+    $('#right').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div class="h" style="margin:0">Container record</div><span class="chip" style="background:${f.col}">${f.label}</span></div>
+      <div class="mono" style="font-size:20px;font-weight:700;margin:4px 0 2px">${fmtId(b.id)}</div>
+      <div class="hint">${esc(b.lane)} · ${esc(b.inco)}</div>
+      <div class="row" style="margin-top:6px"><span>Booked</span><span>Option ${b.option} · ${esc(opt.carrier)}</span></div>
+      <div class="row"><span>Route</span><span style="text-align:right">${esc(opt.route)}</span></div>
+      <div class="row"><span>Cargo</span><span>${b.mass.toFixed(1)} t · ${b.lots.length} lot${b.lots.length > 1 ? 's' : ''}</span></div>
+      <div style="margin-top:10px" class="big">${kg(b.total)}<small>CO₂e · ${b.kgt.toFixed(1)} kg/t</small></div>
+      <div class="bar">${b.lots.map((l) => `<div style="width:${l.kg / b.total * 100}%;background:${l.color};${sel && sel !== l ? 'opacity:.3' : ''}"></div>`).join('')}</div>
+      ${b.lots.map((l) => `<div class="row"><span><i class="dot" style="background:${l.color}"></i>${l.id} ${esc(l.short)}</span><span>${kg(l.kg)} · ${Math.round(l.kg / b.total * 100)}% of CO₂ · ${Math.round(l.t / b.mass * 100)}% of mass</span></div>`).join('')}
+      <div class="h2">By mode</div>${modeRows}
+      <div class="h2">Data quality</div>
+      <div class="bar">${[1, 2, 3].map((q) => `<div style="width:${b.byDq[q] / b.total * 100}%;background:${DQ[q].col}" title="${DQ[q].name}"></div>`).join('')}</div>
+      <div class="leg" style="margin-top:2px">${[1, 2, 3].map((q) => `<span><i class="dot" style="background:${DQ[q].col}"></i>${DQ[q].tag} ${Math.round(b.byDq[q] / b.total * 100)}%</span>`).join('')}</div>
+      ${b.ets ? `<div class="ins">EU carbon charge on this box ≈ <b>${inr(b.ets)}</b> (50% of the sea-leg CO₂ × €88/t), now visible per shipment.</div>` : ''}
+      <div class="h2">Data joined for this box</div>${b.docs.map((d) => `<div class="row"><span>${esc(d[0])}</span><span>${esc(d[1])} <span class="dq" style="background:${DQ[d[2]].col}">${DQ[d[2]].tag}</span></span></div>`).join('')}
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn pri" id="goJ" style="flex:1;justify-content:center">Trace the journey ▶</button><button class="btn" id="goP">Back</button></div>`;
+    $('#goJ').onclick = () => this.toJourney(); $('#goP').onclick = () => this.toPlant();
+    $('#bottom').style.width = '';
+    $('#bottom').innerHTML = `<span class="hint"><b>Top-down view</b> · hover a lot to see its share · drag to orbit · <kbd>Enter</kbd> trace the journey · <kbd>Esc</kbd> back</span>`;
+  },
+  // ---------- journey UI ----------
+  renderJourneyUI() { this.renderJourneyLeft(); this.renderJourneyRight(); this.renderTimeline(); this.crumb(); },
+  renderJourneyLeft() {
+    const b = this.box, cur = this.jbox;
+    const opts = optionTotals(b); const pass = opts.filter((o) => o.ot >= 80); const best = pass.reduce((a, o) => (!a || o.adj < a.adj ? o : a), null);
+    $('#left').innerHTML = `<div class="h">Follow one lot</div><div class="seg" id="lotf"><button data-l="">All</button>${b.lots.map((l) => `<button data-l="${l.id}" style="${''}"><i class="dot" style="background:${l.color}"></i>${l.id}</button>`).join('')}</div>
+      <div class="h2">Booking options on this lane</div>
+      ${opts.map((o) => { const d = o.co2 - b.total; return `<div class="optc ${cur.option === o.key ? 'cur' : ''}" data-k="${o.key}">${o.key === b.option ? '<span class="tag" style="background:#22c55e;color:#04210f">BOOKED</span>' : o.ot < 80 ? '<span class="tag" style="background:#ef4444;color:#fff">ON-TIME &lt; 80%</span>' : ''}
+        <div class="k">Option ${o.key} · ${esc(o.carrier)}</div><div class="r">${esc(o.route)}</div>
+        <div class="g3"><div>CO₂<b>${(o.co2 / 1000).toFixed(2)} t</b>${o.key !== b.option ? `<span class="delta ${d > 0 ? 'up' : 'dn'}">${d > 0 ? '+' : '−'}${Math.abs(d / 1000).toFixed(2)} t</span>` : ''}</div><div>Freight<b>${inr(o.freight)}</b>${o.days} days · ${o.ot}%</div><div>At ₹6,000/t<b>${inr(o.adj)}</b>${best && best.key === o.key ? '<span style="color:var(--good)">best value</span>' : ''}</div></div></div>`; }).join('')}
+      <div class="note">Click an option to redraw the journey as a what-if. Freight plus CO₂ at the internal price of ₹6,000/t; options under 80% on time are not eligible.</div>`;
+    $('#lotf').querySelectorAll('button').forEach((bt) => { bt.classList.toggle('on', (bt.dataset.l || null) === Journey.lot); bt.onclick = () => { Journey.lot = bt.dataset.l || null; this.renderJourneyLeft(); }; });
+    $('#left').querySelectorAll('.optc').forEach((el) => { el.onclick = () => this.showOption(el.dataset.k); });
+  },
+  renderJourneyRight() {
+    const b = this.jbox; if (!b) return; const s = this.sel;
+    if (s && s.leg) return this.renderLeg(s.leg);
+    if (s && (s.node || s.lift)) return this.renderNode(s.node || s.lift.node);
+    const kmS = b.km.sea / b.kmTot, coS = b.byMode.sea / b.total, kmR = b.km.road / b.kmTot, coR = b.byMode.road / b.total;
+    const what = b.option !== this.box.option;
+    const ins = b.km.sea > 0 ? `Ships cover <b>${Math.round(kmS * 100)}%</b> of the kilometres but cause <b>${Math.round(coS * 100)}%</b> of the CO₂. Trucks: <b>${Math.round(kmR * 100)}%</b> of km, <b>${Math.round(coR * 100)}%</b> of CO₂.`
+      : b.byMode.rail > 0 ? `Rail carries <b>${Math.round(b.km.rail / b.kmTot * 100)}%</b> of the kilometres for <b>${Math.round(b.byMode.rail / b.total * 100)}%</b> of the CO₂. The two short truck legs add <b>${Math.round(coR * 100)}%</b>.`
+      : `All road: <b>${Math.round(coR * 100)}%</b> of CO₂. ${b.lots.length > 1 ? 'The first leg carries one lot alone, so that lot carries its CO₂.' : ''}`;
+    $('#right').innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div class="h" style="margin:0">${what ? 'What-if · Option ' + b.option : 'Journey · booked option ' + b.option}</div><span class="chip" style="background:${FLOWS[b.flow].col}">${b.flow}</span></div>
+      <div class="mono" style="font-size:17px;font-weight:700;margin:4px 0 0">${fmtId(b.id)}</div><div class="hint">${esc(b.lane)} · ${esc(b.optSet[b.option].route)}</div>
+      <div class="big" style="margin-top:8px">${kg(b.total)}<small>CO₂e${what ? ` · <span class="delta ${b.total > this.box.total ? 'up' : 'dn'}">${b.total > this.box.total ? '+' : '−'}${Math.round(Math.abs(b.total / this.box.total - 1) * 100)}% vs booked</span>` : ''}</small></div>
+      ${b.outside ? `<div class="hint">+ ${kg(b.outside)} on the customer's barge (their freight, shown dashed, not counted)</div>` : ''}
+      <div class="ins">${ins}</div>
+      <div class="h2">Leg length shows</div><div class="seg" id="lm"><button data-m="balanced">Journey</button><button data-m="distance">True distance</button><button data-m="co2">CO₂</button></div>
+      <div class="h2">How to read it</div>
+      <div class="leg">${b.lots.map((l) => `<span><i class="dot" style="background:${l.color}"></i>${l.id} ${esc(l.short)}</span>`).join('')}${Journey.strands.includes('BOX') ? `<span><i class="dot" style="background:${BOXCOL}"></i>Empty box</span>` : ''}</div>
+      <div class="leg">${['road', 'rail', 'sea', 'barge'].filter((m) => b.legs.some((L) => L.mode === m)).map((m) => `<span><i class="dot" style="background:${MODES[m].col}"></i>${MODES[m].name}</span>`).join('')}<span><i class="dot" style="background:${MODES.lift.col}"></i>Lifts</span></div>
+      <div class="hint" style="margin-top:6px">Thin threads = lots; the glowing sleeve = transport mode; tower height = kg CO₂e. Threads merge where lots share a box.</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="rp">↺ Replay trace</button>${what ? '<button class="btn" id="bk">Back to booked</button>' : ''}<button class="btn" id="tb">Box view</button></div>`;
+    $('#lm').querySelectorAll('button').forEach((bt) => { bt.classList.toggle('on', bt.dataset.m === Journey.mode); bt.onclick = () => this.setLegMode(bt.dataset.m); });
+    $('#rp').onclick = () => this.replay(); $('#tb').onclick = () => this.toBox(); if ($('#bk')) $('#bk').onclick = () => this.showOption(this.box.option);
+  },
+  renderLeg(L) {
+    const b = this.jbox; const st = L.t1 && L.t1 < NOW ? 'Done' : L.t0 && L.t0 > NOW ? 'Planned: CO₂ is a forecast until actual data arrives' : 'In progress';
+    let act = '';
+    if (L.empty) act = 'Empty moves were invisible before. Reusing an import box for an export cuts this leg.';
+    else if (L.mode === 'road' && L.km >= 200) act = 'Long truck leg. Compare the rail and LNG options on the left.';
+    else if (L.mode === 'sea') act = 'Carrier choice matters: lines differ by up to 31–35% in CO₂ per box-km on the same lane.';
+    else if (L.strands.length === 1 && b.lots.length > 1 && L.mode === 'road' && L.basis === 'box') act = 'This leg carries one lot alone. Filling the box here (the "fuller light boxes" lever) cuts that lot\'s CO₂ per tonne.';
+    else if (L.basis === 'tkm' && L.scope === 'Cat. 1') act = 'Supplier-paid leg (Scope 3 Cat. 1). The supplier clause asks for trip data to upgrade it from L3.';
+    $('#right').innerHTML = `<a class="hint" style="cursor:pointer" id="bk2">← Journey summary</a>
+      <div style="margin-top:8px"><span class="chip" style="background:${MODES[L.mode].col}">${MODES[L.mode].name}</span><span class="dq" style="background:${DQ[L.dq].col}">${DQ[L.dq].tag}</span>${L.outside ? '<span class="chip g">not counted</span>' : ''}</div>
+      <div style="font-size:16px;font-weight:700;margin-top:6px">${esc(b.nodes[L.from].name)} → ${esc(b.nodes[L.to].name)}</div>
+      <div class="big" style="margin-top:4px">${kg(L.kg)}<small>CO₂e</small></div>
+      <div class="row"><span>Distance</span><span>${int(L.km)} km</span></div>
+      <div class="row"><span>Operator</span><span>${esc(L.carrier || '')}</span></div>
+      <div class="row"><span>Vehicle</span><span>${esc(L.vehicle || '')}</span></div>
+      <div class="row"><span>When</span><span>${L.t0 ? fmtDT(L.t0) : ''} → ${L.t1 ? fmtDT(L.t1) : ''}</span></div>
+      <div class="row"><span>Status</span><span style="text-align:right">${st}</span></div>
+      <div class="row"><span>Paid by</span><span>${esc(L.paid)} · Scope 3 ${L.scope}</span></div>
+      <div class="h2">Calculation</div>
+      <div class="note mono" style="margin-top:0;font-size:11.5px">${L.basis === 'tkm' ? `${b.lots.filter((l) => L.strands.includes(l.id)).reduce((a, l) => a + l.t, 0).toFixed(1)} t × ${int(L.km)} km × ${L.ef} kg/t-km` : `${int(L.km)} km × ${L.mode === 'sea' ? (L.ef * 1000).toFixed(1) + ' g/TEU-km' : L.ef + ' ' + L.efUnit.replace('kg CO₂e / ', 'kg/')}`} = ${kg(L.kg)}</div>
+      <div class="row"><span>Factor source</span><span style="text-align:right">${esc(L.efSrc)}</span></div>
+      <div class="row"><span>Data level</span><span style="text-align:right">${DQ[L.dq].tag} · ${esc(DQ[L.dq].name)}</span></div>
+      <div class="row"><span>Data from</span><span style="text-align:right">${esc(L.dqSrc || '')}</span></div>
+      <div class="h2">Allocated to</div>
+      ${L.alloc.map((a) => { const l = b.lots.find((x) => x.id === a.id); return `<div class="row"><span><i class="dot" style="background:${l.color}"></i>${l.id} ${esc(l.short)}</span><span>${kg(a.kg)} · ${Math.round(a.share * 100)}%</span></div>`; }).join('')}
+      ${L.strands.includes('BOX') ? '<div class="hint">Empty-box move: shared by all lots in the box, by mass.</div>' : ''}
+      ${L.events && L.events.length ? `<div class="h2">How TRACE knows</div>${L.events.map((e) => `<div class="row"><span class="mono">${fmtDT(e[0])}</span><span style="text-align:right">${esc(e[1])} <span class="mini">· ${esc(e[2])}</span></span></div>`).join('')}` : ''}
+      ${act ? `<div class="ins">${esc(act)}</div>` : ''}`;
+    $('#bk2').onclick = () => { this.sel = null; this.renderJourneyRight(); };
+  },
+  renderNode(id) {
+    const b = this.jbox, n = b.nodes[id]; const lf = b.lifts.filter((F) => F.node === id);
+    const inL = b.legs.filter((L) => L.to === id), outL = b.legs.filter((L) => L.from === id);
+    $('#right').innerHTML = `<a class="hint" style="cursor:pointer" id="bk2">← Journey summary</a>
+      <div style="font-size:17px;font-weight:700;margin-top:8px">${esc(n.name)}</div><div class="hint">${esc(n.sub)}</div>
+      ${lf.length ? `<div class="h2">Handling here</div>${lf.map((F) => `<div class="row"><span>${esc(F.label)}</span><span>${kg(F.kg)} <span class="dq" style="background:${DQ[F.dq].col}">${DQ[F.dq].tag}</span></span></div>`).join('')}` : ''}
+      ${inL.length ? `<div class="h2">Arrives by</div>${inL.map((L) => `<div class="row"><span><i class="dot" style="background:${MODES[L.mode].col}"></i>${esc(b.nodes[L.from].name)}</span><span>${int(L.km)} km · ${kg(L.kg)}</span></div>`).join('')}` : ''}
+      ${outL.length ? `<div class="h2">Leaves by</div>${outL.map((L) => `<div class="row"><span><i class="dot" style="background:${MODES[L.mode].col}"></i>${esc(b.nodes[L.to].name)}</span><span>${int(L.km)} km · ${kg(L.kg)}</span></div>`).join('')}` : ''}
+      ${inL.length > 1 || (inL.length && outL.length && new Set(outL.flatMap((L) => L.strands)).size > new Set(inL.flatMap((L) => L.strands)).size) ? '<div class="ins">Lots meet here. From this point the legs are shared and split by mass.</div>' : ''}`;
+    $('#bk2').onclick = () => { this.sel = null; this.renderJourneyRight(); };
+  },
+  renderTimeline() {
+    const b = this.jbox; if (!b) return;
+    const legs = b.legs.filter((L) => L.t0 && L.t1 && !L.outside);
+    const t0 = Math.min(...legs.map((L) => +L.t0)), t1 = Math.max(...legs.map((L) => +L.t1)), sp = t1 - t0 || 1;
+    const nowX = clamp((+NOW - t0) / sp, 0, 1) * 100;
+    $('#bottom').style.width = 'min(820px, calc(100% - 760px))';
+    $('#bottom').innerHTML = `<div id="tl"><div class="ax"><span>${fmtD(new Date(t0))}</span><span>Leg timeline · hatched = planned · white line = now</span><span>${fmtD(new Date(t1))}</span></div><div class="track">${legs.map((L) => `<div class="sg ${+L.t0 > +NOW ? 'fut' : ''}" data-i="${L._i}" title="${esc(b.nodes[L.from].name)} → ${esc(b.nodes[L.to].name)}" style="left:${(+L.t0 - t0) / sp * 100}%;width:${Math.max(0.6, (+L.t1 - +L.t0) / sp * 100)}%;background:${MODES[L.mode].col}"></div>`).join('')}<div class="now" style="left:${nowX}%"></div></div></div>`;
+    $('#bottom').querySelectorAll('.sg').forEach((el) => { el.onclick = () => { this.sel = { leg: b.legs[+el.dataset.i] }; this.renderJourneyRight(); }; });
+  },
+  // ---------- guided story ----------
+  cap(html, step, n) { const c = $('#caption'); if (!html) { c.style.display = 'none'; return; } c.innerHTML = html + (step ? `<span class="pg">STORY ${step}/${n} · press P to stop</span>` : ''); c.style.display = 'block'; },
+  wait(s) { const tok = this.tour; return new Promise((r) => setTimeout(() => r(this.tour === tok && !!tok), s * 1000)); },
+  stopTour() { this.tour = null; this.cap(null); this.forceTip = null; $('#bTour').textContent = '▶ Play story'; $('#tip').style.display = 'none'; },
+  async playTour() {
+    const tok = {}; this.tour = tok; $('#bTour').textContent = '■ Stop story';
+    const N = 9; const ok = () => this.tour === tok;
+    if (this.scene !== Plant) { await this.toPlant(); await this.wait(0.6); }
+    if (!ok()) return;
+    camTo({ target: [10, 0, 0], yaw: 0.5, pitch: 0.6, dist: 300 }, 2.2);
+    this.cap('Jamshedpur Works, one sample month: <b>2,375 containers</b>, <b>2,576 t CO₂e</b>. Today no single box has a carbon number. With TRACE, every box does.', 1, N);
+    if (!await this.wait(5.5)) return;
+    const tr = Plant.bringFeatured(1); tr.held = true;
+    await camTo({ target: [tr.node.pos[0], 2, tr.node.pos[2]], yaw: tr.yaw + 1.1, pitch: 0.55, dist: 55 }, 2.2); if (!ok()) return;
+    this.forceTip = tr;
+    this.cap('An import box reaches Gate 3. Its record already says <b>what is inside</b>, where each part came from, and its <b>CO₂ so far</b>.', 2, N);
+    if (!await this.wait(5)) return;
+    this.forceTip = null; tr.held = false; await this.openBox(tr.box, tr); if (!ok()) return;
+    const b = this.box;
+    this.cap(`Inside: <b>${b.lots.length} lots from ${b.lots.length} suppliers</b>: ${b.lots.map((l) => l.short).join(', ')}. One box, ${b.lots.length} different journeys.`, 3, N);
+    if (!await this.wait(4.5)) return;
+    for (const l of b.lots) { this.lotSel = l; this.renderBoxUI(); this.cap(`<b style="color:${l.color}">${l.id} ${esc(l.name)}</b>: ${l.t.toFixed(1)} t · own legs ${kg(l.own)} + its share of shared legs ${kg(l.shared)} = <b>${kg(l.kg)}</b>.`, 4, N); if (!await this.wait(2.6)) return; }
+    this.lotSel = null; this.renderBoxUI();
+    this.cap('Shared legs are split by mass, as ISO 14083 requires. Each lot keeps the legs it travelled alone.', 4, N);
+    if (!await this.wait(3.5)) return;
+    await this.toJourney(); if (!ok()) return;
+    this.cap('Now trace it back: TRACE follows every lot <b>back to its supplier</b>, joining SAP, e-way bills, FASTag, FOIS rake data, AIS and the carrier\'s voyage report.', 5, N);
+    while (ok() && (Journey.trace || !Journey.traced)) await this.wait(0.3);
+    if (!await this.wait(1.5)) return;
+    const j = this.jbox;
+    this.setLegMode('distance');
+    this.cap(`Draw every leg at its true length: the ship is <b>${Math.round(j.km.sea / j.kmTot * 100)}% of the distance</b>.`, 6, N);
+    if (!await this.wait(4.5)) return;
+    this.setLegMode('co2');
+    this.cap(`Now draw it by CO₂: the ship is <b>${Math.round(j.byMode.sea / j.total * 100)}%</b>, and the short road legs are <b>${Math.round(j.byMode.road / j.total * 100)}%</b> on just ${Math.round(j.km.road / j.kmTot * 100)}% of the distance. The cuts are in the short legs and carrier choice.`, 7, N);
+    if (!await this.wait(6)) return;
+    this.setLegMode('balanced');
+    const o = optionTotals(this.box); const A = o.find((x) => x.key === 'A'), B = o.find((x) => x.key === 'B'), C = o.find((x) => x.key === 'C');
+    this.cap(`Booking desk: Option B (direct sailing + rail) emits <b>${(A.co2t - B.co2t).toFixed(2)} t less</b> than A for ${inr(B.freight - A.freight)} more freight. At ₹6,000/t it wins on cost; C is cheaper but only ${C.ot}% on time.`, 8, N);
+    await this.showOption('A'); if (!await this.wait(3)) return;
+    await this.showOption('B'); if (!await this.wait(3.5)) return;
+    this.cap('Every box. Every lot. Every leg. <b>Track · Report · Act · Contract · Evolve.</b>', 9, N);
+    if (!await this.wait(3)) return;
+    await this.toPlant();
+    if (!await this.wait(3)) return;
+    this.stopTour();
+  },
+};
+addEventListener('load', () => App.init());
+</script>
+</body>
+</html>

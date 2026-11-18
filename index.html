@@ -22,6 +22,20 @@ nav button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;pad
 nav button:hover{background:rgba(255,255,255,.07)}
 nav button.on{background:#fff;color:var(--navy);font-weight:600}
 nav button i{font-style:normal;width:20px;text-align:center}
+.twin-cta{position:relative;display:flex;align-items:center;gap:11px;margin:4px 2px 0;padding:12px 13px;border-radius:12px;text-decoration:none;color:#fff;background:linear-gradient(135deg,rgba(29,95,191,.55),rgba(19,161,157,.35));isolation:isolate;box-shadow:0 0 0 1px rgba(120,220,255,.35),0 0 18px rgba(56,189,248,.35),inset 0 1px 0 rgba(255,255,255,.18);animation:twinGlow 3.2s ease-in-out infinite;transition:transform .2s ease,box-shadow .2s ease}
+.twin-cta::before{content:"";position:absolute;inset:-1.5px;border-radius:13px;padding:1.5px;background:conic-gradient(from var(--twa,0deg),#38bdf8,#2dd4bf,#a78bfa,#38bdf8);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:-1;animation:twinSpin 4s linear infinite}
+.twin-cta:hover{transform:translateY(-1px);box-shadow:0 0 0 1px rgba(150,230,255,.6),0 0 28px rgba(56,189,248,.6),inset 0 1px 0 rgba(255,255,255,.25)}
+.twin-cta:focus-visible{outline:2px solid #7dd3fc;outline-offset:3px}
+.twin-cta .ic{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.twin-cta .tx{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.twin-cta .tx b{font-size:13.5px;font-weight:650;letter-spacing:.01em}
+.twin-cta .tx small{font-size:11px;color:#bfe9ff}
+.twin-cta .ar{margin-left:auto;font-size:15px;opacity:.85;transition:transform .2s ease}
+.twin-cta:hover .ar{transform:translateX(3px)}
+@property --twa{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes twinSpin{to{--twa:360deg}}
+@keyframes twinGlow{0%,100%{box-shadow:0 0 0 1px rgba(120,220,255,.35),0 0 14px rgba(56,189,248,.28),inset 0 1px 0 rgba(255,255,255,.18)}50%{box-shadow:0 0 0 1px rgba(120,220,255,.5),0 0 26px rgba(45,212,191,.5),inset 0 1px 0 rgba(255,255,255,.18)}}
+@media (prefers-reduced-motion:reduce){.twin-cta,.twin-cta::before{animation:none}}
 .side-foot{margin-top:auto;font-size:11px;color:#a9bbd8;padding:8px 10px;border-top:1px solid rgba(255,255,255,.12)}
 main{min-width:0}
 .top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
@@ -196,6 +210,11 @@ svg text{font-family:inherit}
       <div class="grp">Lead</div>
       <button data-s="exec"><i>▲</i>Executive &amp; roadmap</button>
     </nav>
+    <a class="twin-cta" href="carbon-twin.html" title="Open the 3D Container Carbon Twin">
+      <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e0f7ff" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z"/><path d="M3.5 7 12 11.5 20.5 7M12 11.5v10"/></svg></span>
+      <span class="tx"><b>Carbon Twin</b><small>Live 3D network view</small></span>
+      <span class="ar" aria-hidden="true">→</span>
+    </a>
     <div class="side-foot">Concept mock-up for Steel-a-thon 2026. All figures are synthetic sample data.<button class="back" id="back">← Back to intro</button></div>
   </aside>
   <main>
