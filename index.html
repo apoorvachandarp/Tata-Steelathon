@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRACE Control Tower</title>
+<style>
+:root{--navy:#0a2753;--navy2:#13386f;--blue:#1d5fbf;--bg:#f2f5f9;--panel:#fff;--line:#e2e8f0;--fg:#13213a;--muted:#5d6c83;--soft:#eef3fa;--ok:#178a50;--warn:#c27c06;--bad:#cc3434;--sea:#1f6fd1;--road:#ec7a2c;--rail:#13a19d;--hand:#8a6ccf;--l1:#1e9e5a;--l2:#4d8fe0;--l3:#bcc6d3}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--fg);font-size:14px;line-height:1.4}
+button{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+aside{background:linear-gradient(180deg,var(--navy),#071a38);color:#fff;padding:18px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;gap:10px;align-items:center;padding:4px 8px}
+.brand .mk{font-weight:800;letter-spacing:.14em;font-size:12px;border:1.5px solid #fff;border-radius:6px;padding:5px 7px}
+.brand b{display:block;font-size:14px}
+.brand small{color:#a9bbd8;font-size:11px}
+nav{display:grid;gap:4px}
+nav .grp{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#8ea3c7;padding:10px 10px 4px}
+nav button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;color:#d7e2f3;font-size:13.5px}
+nav button:hover{background:rgba(255,255,255,.07)}
+nav button.on{background:#fff;color:var(--navy);font-weight:600}
+nav button i{font-style:normal;width:20px;text-align:center}
+.side-foot{margin-top:auto;font-size:11px;color:#a9bbd8;padding:8px 10px;border-top:1px solid rgba(255,255,255,.12)}
+main{min-width:0}
+.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:12px 24px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.top h1{margin:0;font-size:19px}
+.top p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font-size:12px;padding:5px 10px;border-radius:999px;background:var(--soft);color:var(--navy2);white-space:nowrap}
+.chip.mock{background:#fff4e0;color:#8a5a00}
+select{font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--fg)}
+.content{padding:20px 24px 48px;display:grid;gap:16px}
+.screen{display:grid;gap:16px}
+.screen[hidden]{display:none}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:inline-flex;flex-wrap:wrap;gap:2px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg span{font-size:12px;color:var(--muted);padding:0 6px 0 8px;align-self:center}
+.seg button{all:unset;cursor:pointer;font-size:12.5px;padding:6px 11px;border-radius:7px}
+.seg button:hover{background:var(--soft)}
+.seg button.on{background:var(--navy);color:#fff}
+.insight{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 16px;font-size:14.5px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:3px;align-content:start}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi .v{font-size:25px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi .s.ok{color:var(--ok)}.kpi .s.warn{color:var(--warn)}.kpi .s.bad{color:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h3{margin:0;font-size:15px}
+.card .note{color:var(--muted);font-size:12px;margin:3px 0 12px}
+.wide{grid-column:1/-1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.stack{display:flex;height:34px;border-radius:7px;overflow:hidden;margin:4px 0 12px}
+.stack div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;min-width:2px;white-space:nowrap;overflow:hidden}
+.lbl{font-size:12px;color:var(--muted)}
+.hb{display:grid;grid-template-columns:minmax(0,42%) 1fr auto;gap:10px;align-items:center;font-size:12.5px;margin:7px 0}
+.hb .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .t{height:9px;background:var(--soft);border-radius:99px;overflow:hidden}
+.hb .t b{display:block;height:100%;border-radius:99px}
+.hb .v{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:#fafbfd}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.tbox{overflow:auto;border:1px solid var(--line);border-radius:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-ok{color:var(--ok);background:#e5f5ec}.p-warn{color:var(--warn);background:#fdf2dc}.p-bad{color:var(--bad);background:#fbe6e6}.p-mute{color:var(--muted);background:#eef1f5}.p-blue{color:var(--blue);background:#e6effc}
+.mini{display:flex;align-items:center;gap:8px}
+.mini .t{flex:1;min-width:50px;height:7px;background:var(--soft);border-radius:99px;overflow:hidden}
+.mini .t b{display:block;height:100%}
+.heat{display:grid;grid-template-columns:1.3fr repeat(4,1fr);gap:5px;font-size:12.5px}
+.heat .h{color:var(--muted);font-size:11.5px;text-align:right;padding:2px 8px}
+.heat .rh{color:var(--muted);padding:10px 2px;font-size:12px}
+.heat button{all:unset;cursor:pointer;text-align:right;padding:10px;border-radius:8px;border:1px solid var(--line);font-variant-numeric:tabular-nums;font-weight:600}
+.heat button:hover{border-color:var(--blue)}
+.heat button.on{outline:2px solid var(--navy);outline-offset:-2px}
+.alerts{display:grid;gap:8px}
+.alert{display:grid;grid-template-columns:80px 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px}
+.alert .area{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.btn{all:unset;cursor:pointer;font-size:12px;font-weight:600;color:var(--blue);padding:6px 10px;border-radius:8px;border:1px solid #cddcf3;white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.done{color:var(--ok);border-color:#bfe5cf}
+.feeds{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.feed{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:6px}
+.feed .nm{font-weight:600}
+.feed .sys{font-size:11.5px;color:var(--muted)}
+.feed .row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.step{position:relative;background:var(--soft);border-radius:10px;padding:12px}
+.step .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.step .v{font-size:21px;font-weight:650;font-variant-numeric:tabular-nums}
+.step .d{font-size:12px;color:var(--muted)}
+.scroll{overflow-x:auto}
+.split{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+.list{display:grid;gap:6px;max-height:640px;overflow:auto}
+.li{all:unset;cursor:pointer;display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.li:hover{border-color:var(--blue)}
+.li.on{border-color:var(--navy);box-shadow:inset 3px 0 0 var(--navy)}
+.li b{font-size:13px;letter-spacing:.02em}
+.li small{color:var(--muted);font-size:12px}
+.search{width:100%;font:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+.rec-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
+.rec-id{font-size:22px;font-weight:700;letter-spacing:.03em}
+.big{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px 16px;margin:14px 0}
+.kv div{font-size:12px;color:var(--muted)}
+.kv b{display:block;color:var(--fg);font-size:13.5px;font-weight:600}
+.journey{display:flex;gap:0;align-items:stretch;overflow-x:auto;padding:4px 0 8px}
+.leg{min-width:132px;flex:1;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;display:grid;gap:4px;position:relative}
+.arrow{align-self:center;color:var(--muted);padding:0 4px;font-size:16px}
+.leg .ic{font-size:20px}
+.leg .nm{font-size:12px;font-weight:600}
+.leg .kg{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.lv{display:inline-grid;place-items:center;min-width:22px;height:20px;padding:0 6px;border-radius:99px;font-size:11px;font-weight:700;color:#fff}
+.stmt{border:1px dashed #b9c7dc;background:#f8fbff;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.opt{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;display:grid;gap:8px}
+.opt.win{border:2px solid var(--ok);box-shadow:0 4px 14px rgba(23,138,80,.12)}
+.opt.out{opacity:.6}
+.opt .hd{display:flex;justify-content:space-between;align-items:center}
+.opt .hd b{font-size:16px}
+.opt dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0;font-size:12.5px}
+.opt dt{color:var(--muted)}
+.opt dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.opt .tot{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.slider{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;flex:1;min-width:280px}
+.slider input{flex:1}
+.slider b{min-width:84px;text-align:right;font-variant-numeric:tabular-nums}
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.gate{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff;display:grid;gap:6px;border-top:4px solid var(--blue)}
+.gate .g{font-weight:700}
+.gate .w{font-size:12px;color:var(--muted)}
+.gate ul{margin:0;padding-left:18px;font-size:12.5px;display:grid;gap:3px}
+.tip{position:fixed;z-index:50;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 8px 24px rgba(10,39,83,.16);border-radius:10px;padding:8px 10px;font-size:12px;max-width:260px;display:none}
+.tip b{display:block;margin-bottom:3px}
+svg text{font-family:inherit}
+.intro{position:fixed;inset:0;z-index:100;display:grid;place-items:center;color:#fff;overflow:hidden;background:radial-gradient(1100px 600px at 18% 8%,#1d4f9a 0%,transparent 60%),radial-gradient(900px 520px at 88% 92%,#0d7480 0%,transparent 55%),linear-gradient(160deg,#061937,#0a2753 55%,#04122a);transition:opacity .7s ease,visibility .7s}
+.intro.gone{opacity:0;visibility:hidden}
+.intro::before{content:"";position:absolute;inset:-60%;background:conic-gradient(from 0deg,transparent 0 60%,rgba(95,224,200,.10) 75%,transparent 90%);animation:spin 20s linear infinite}
+.intro::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(circle at 50% 50%,#000 30%,transparent 75%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.intro .in{position:relative;z-index:1;text-align:center;padding:24px;max-width:920px}
+.intro .in>*{animation:up .9s ease both}
+.intro .in>*:nth-child(2){animation-delay:.12s}.intro .in>*:nth-child(3){animation-delay:.24s}.intro .in>*:nth-child(4){animation-delay:.36s}.intro .in>*:nth-child(5){animation-delay:.48s}.intro .in>*:nth-child(6){animation-delay:.62s}
+.intro .eyebrow{letter-spacing:.24em;text-transform:uppercase;font-size:12px;color:#9fb6d9}
+.intro .mark{display:inline-block;font-weight:800;letter-spacing:.34em;font-size:22px;padding:10px 8px 10px 18px;border:2px solid #fff;border-radius:12px;margin:24px 0 18px}
+.intro h1{font-size:clamp(42px,7.4vw,84px);line-height:1.02;margin:0;font-weight:750;letter-spacing:-.025em}
+.intro h1 span{background:linear-gradient(90deg,#86b8ff,#5fe0c8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.intro .tag{font-size:clamp(16px,2vw,21px);color:#cfdcf0;margin:20px auto 30px;max-width:660px;line-height:1.5}
+.acr{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:44px}
+.acr span{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);border-radius:999px;padding:8px 18px;font-size:14.5px;color:#e6eefb}
+.acr b{color:#6fe6cf;font-size:17px}
+.go{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:14px;padding:17px 18px 17px 32px;border-radius:999px;font-weight:700;font-size:17px;color:#0a2753;background:linear-gradient(90deg,#fff,#d9e8ff);box-shadow:0 12px 44px rgba(95,224,200,.35),0 0 0 7px rgba(255,255,255,.08);transition:transform .25s ease,box-shadow .25s ease}
+.go:hover,.go:focus-visible{transform:translateY(-2px) scale(1.03);box-shadow:0 16px 56px rgba(95,224,200,.55),0 0 0 9px rgba(255,255,255,.13)}
+.go i{font-style:normal;display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#0a2753;color:#fff;transition:transform .25s}
+.go:hover i{transform:translateX(4px)}
+.intro .foot{position:absolute;z-index:1;bottom:22px;left:0;right:0;text-align:center;font-size:12px;color:#8ea3c7}
+.back{all:unset;cursor:pointer;display:block;margin-top:8px;color:#fff;font-weight:600}
+.back:hover{text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.intro::before,.intro .in>*{animation:none}}
+
+@media (max-width:980px){.app{grid-template-columns:1fr}aside{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}nav{display:flex;flex-wrap:wrap}nav .grp,.side-foot{display:none}.split{grid-template-columns:1fr}.content{padding:16px}.top{position:static}}
+</style>
+</head>
+<body>
+<div class="intro" id="intro">
+  <div class="in">
+    <div class="eyebrow">Tata Steel · Steel-a-thon 2026 · Container logistics</div>
+    <div class="mark">TRACE</div>
+    <h1><span>Control Tower</span></h1>
+    <p class="tag">See the carbon of every container, on every leg, and make every freight decision carbon-smart.</p>
+    <div class="acr"><span><b>T</b>rack</span><span><b>R</b>eport</span><span><b>A</b>ct</span><span><b>C</b>ontract</span><span><b>E</b>volve</span></div>
+    <button class="go" id="go">Go to dashboard <i>→</i></button>
+  </div>
+  <div class="foot">Concept mock-up · sample data · press Enter to continue</div>
+</div>
+<div class="app">
+  <aside>
+    <div class="brand"><span class="mk">TRACE</span><div><b>Control Tower</b><small>Tata Steel · Procurement Logistics</small></div></div>
+    <nav id="nav">
+      <div class="grp">Monitor</div>
+      <button data-s="tower"><i>◉</i>Control tower</button>
+      <button data-s="pipeline"><i>⇄</i>Data sources &amp; pipeline</button>
+      <button data-s="tracker"><i>▣</i>Container tracker</button>
+      <div class="grp">Decide</div>
+      <button data-s="carriers"><i>★</i>Carrier scorecard</button>
+      <button data-s="booking"><i>₹</i>Booking desk</button>
+      <div class="grp">Lead</div>
+      <button data-s="exec"><i>▲</i>Executive &amp; roadmap</button>
+    </nav>
+    <div class="side-foot">Concept mock-up for Steel-a-thon 2026. All figures are synthetic sample data.<button class="back" id="back">← Back to intro</button></div>
+  </aside>
+  <main>
+    <header class="top">
+      <div><h1 id="pt"></h1><p id="ps"></p></div>
+      <div class="chips">
+        <label class="chip">Viewing as
+          <select id="role" aria-label="Role">
+            <option value="tower">Head, Container Management</option>
+            <option value="pipeline">Logistics Carbon team</option>
+            <option value="tracker">Customer service / Commercial</option>
+            <option value="carriers">Procurement category manager</option>
+            <option value="booking">Container booking desk</option>
+            <option value="exec">CPO / ExCo</option>
+          </select>
+        </label>
+        <span class="chip">Period: Sep 2027</span>
+        <span class="chip mock">Mock-up · sample data</span>
+      </div>
+    </header>
+    <div class="content">
+
+      <section class="screen" id="tower">
+        <div class="bar">
+          <div class="seg" id="f-flow"><span>Flow</span></div>
+          <div class="seg" id="f-plant"><span>Plant</span></div>
+          <button class="btn" id="f-reset">Reset</button>
+        </div>
+        <div class="insight" id="t-insight"></div>
+        <div class="kpis" id="t-kpis"></div>
+        <div class="grid">
+          <div class="card"><h3>Distance vs CO₂ by mode</h3><p class="note">Trucks are a small share of the distance but a big share of the CO₂.</p><div id="t-modes"></div></div>
+          <div class="card"><h3>Daily CO₂, September 2027</h3><p class="note">Tonnes per booking day. Dashed line: average day.</p><div id="t-days"></div></div>
+          <div class="card"><h3>Top lanes by CO₂</h3><p class="note">Tonnes this month · kg per TEU.</p><div id="t-lanes"></div></div>
+          <div class="card"><h3>Plant × flow</h3><p class="note">Tonnes of CO₂. Click a cell to filter the page.</p><div id="t-heat"></div></div>
+        </div>
+        <div class="card"><h3>Alerts and actions</h3><p class="note">Rules run on every data refresh across the whole network.</p><div class="alerts" id="t-alerts"></div></div>
+      </section>
+
+      <section class="screen" id="pipeline" hidden>
+        <div class="insight">Seven feeds come in, the TRACE engine joins and prices them, and every container gets one carbon record. Each record shows which feed every number came from.</div>
+        <div class="feeds" id="p-feeds"></div>
+        <div class="card"><h3>From source feeds to carbon records</h3><p class="note">Band width = tonnes of CO₂ each source supplies this month. Colour = data quality level. Hover a band for details.</p><div class="scroll"><div id="p-flow"></div></div>
+          <div class="legend"><span><i style="background:var(--l1)"></i>Level 1 · actual fuel or energy</span><span><i style="background:var(--l2)"></i>Level 2 · partner or carrier data</span><span><i style="background:var(--l3)"></i>Level 3 · estimate</span></div></div>
+        <div class="card"><h3>Transformation steps this month</h3><p class="note">What the engine did with the raw data.</p><div class="steps" id="p-steps"></div></div>
+        <div class="grid">
+          <div class="card"><h3>Data quality by mode</h3><p class="note">Share of CO₂ on each level. Black line: FY28 goal of 40% on Levels 1–2.</p><div id="p-quality"></div></div>
+          <div class="card"><h3>Distance check: carrier vs ship tracking</h3><p class="note">Each dot is a voyage. Red dots sailed 10%+ more than the carrier reported.</p><div id="p-ais"></div></div>
+          <div class="card"><h3>Scope 3 split by Incoterm</h3><p class="note">Who pays for each leg decides the GHG Protocol category.</p><div id="p-scope"></div></div>
+          <div class="card"><h3>Feed health</h3><p class="note">Stale = no file for 2+ days. Coverage = share of expected containers matched.</p><div class="tbox"><table id="p-health"></table></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="tracker" hidden>
+        <div class="split">
+          <div class="card"><h3>Containers</h3><p class="note">Sample records. Search by number, lane or carrier.</p><input class="search" id="k-q" placeholder="Search containers"><div class="list" id="k-list"></div></div>
+          <div class="card" id="k-rec"></div>
+        </div>
+      </section>
+
+      <section class="screen" id="carriers" hidden>
+        <div class="insight" id="c-insight"></div>
+        <div class="grid">
+          <div class="card wide"><h3>CO₂ intensity vs reliability</h3><p class="note">Bubble size = containers this month. Left of zero = cleaner than the lane average (reported data). Above the red line = meets the 80% on-time bar.</p><div id="c-bubbles"></div>
+            <div class="legend"><span><i style="background:var(--ok)"></i>Leader</span><span><i style="background:var(--blue)"></i>Performer</span><span><i style="background:var(--bad)"></i>Laggard</span><span><i style="background:var(--l3)"></i>No CO₂ data</span></div></div>
+        </div>
+        <div class="card"><h3>Carrier scorecard</h3><p class="note">Score out of 100: CO₂ vs lane 40 · data quality 25 · green-fuel offer 15 · A/B-rated ships 10 · climate target 10. Leaders gain 10% volume at review; laggards lose 10%.</p><div class="tbox"><table id="c-table"></table></div></div>
+      </section>
+
+      <section class="screen" id="booking" hidden>
+        <div class="bar">
+          <div class="seg" id="b-lane"><span>Lane</span></div>
+          <div class="slider"><span class="lbl">Internal carbon price</span><input type="range" id="b-price" min="0" max="10000" step="250" value="6000" aria-label="Carbon price per tonne"><b id="b-pv"></b></div>
+        </div>
+        <div class="insight" id="b-insight"></div>
+        <div class="opts" id="b-opts"></div>
+        <div class="grid">
+          <div class="card"><h3>Freight + carbon charge</h3><p class="note">₹ per box. Grey = below the 80% on-time bar, so it cannot win.</p><div id="b-bars"></div><div class="legend"><span><i style="background:var(--navy2)"></i>Freight</span><span><i style="background:var(--road)"></i>Carbon charge</span></div></div>
+          <div class="card"><h3>Who wins as the carbon price rises</h3><p class="note">Cheapest freight + carbon among reliable options.</p><div id="b-wins"></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="exec" hidden>
+        <div class="bar"><div class="seg" id="e-scen"><span>Scenario</span></div></div>
+        <div class="kpis" id="e-kpis"></div>
+        <div class="grid">
+          <div class="card"><h3>CO₂ path, FY28–FY30</h3><p class="note">kt CO₂ a year. Selected scenario in colour.</p><div id="e-path"></div></div>
+          <div class="card"><h3>Investment: ₹22.5 crore</h3><p class="note">Released at four checkpoints, FY28–FY30.</p><div id="e-budget"></div></div>
+          <div class="card wide"><h3>Reduction levers, cheapest first</h3><p class="note">Bar width = kt CO₂ saved a year by FY30. Height = ₹'000 per tonne saved (below zero saves money).</p><div id="e-macc"></div><div class="legend"><span><i style="background:var(--ok)"></i>Wave 1 · quick wins</span><span><i style="background:var(--blue)"></i>Wave 2 · mode shift</span><span><i style="background:var(--warn)"></i>Wave 3 · green-fuel credits</span></div></div>
+        </div>
+        <div class="card"><h3>Roadmap checkpoints</h3><p class="note">Money is released only when each gate is passed.</p><div class="road" id="e-road"></div></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+<div class="tip" id="tip"></div>
+<script>
+const M = {"cuts":{"All|All":{"n":5000,"co2":5004,"kgteu":1001,"l12":0.418,"rail":0.359,"ot":0.851,"fr":49.5,"t":[2510,2162,196,137],"km":[0.952,0.033,0.016,0],"days":[175,171.4,163.4,159.2,170.3,148.3,180.2,185.4,189.7,184.6,180.9,155.2,165.8,162.7,169,139,161.7,149.8,175.5,168.7,195.6,160.2,183.9,164.9,155.9,161.1,156.5,170.9,137.8,162],"lanes":[["China → Jamshedpur",310,1011],["Jamshedpur → Europe",289,1223],["Jamshedpur → Asia",263,677],["Europe → Jamshedpur",241,1409],["Jamshedpur → LATAM",230,1619],["Ghaziabad → Kalinganagar",221,1889]]},"All|Jamshedpur":{"n":2375,"co2":2576,"kgteu":1085,"l12":0.408,"rail":0.373,"ot":0.847,"fr":25.4,"t":[1265,1129,113,69],"km":[0.949,0.034,0.018,0],"days":[88.3,95.4,81.3,68.1,82.5,73.2,100.1,95.3,98.5,102.6,107.1,85.3,75.9,85.7,100.5,70.1,71.4,73.7,89.4,83.7,91.2,89,100.9,70.1,85.9,71.3,82.4,89.2,72.6,95.6],"lanes":[["China → Jamshedpur",310,1011],["Jamshedpur → Europe",289,1223],["Jamshedpur → Asia",263,677],["Europe → Jamshedpur",241,1409],["Jamshedpur → LATAM",230,1619],["Ludhiana → Jamshedpur",201,1717]]},"All|Kalinganagar":{"n":1688,"co2":1536,"kgteu":910,"l12":0.428,"rail":0.326,"ot":0.854,"fr":14.7,"t":[739,706,50,40],"km":[0.95,0.036,0.014,0],"days":[53.7,47.4,51.3,55.3,51.3,45.3,52.9,60.4,52,53.6,44.4,49.2,51.1,44.3,44.9,43.5,55.5,47.4,61.9,51.6,71.9,47.6,58.3,64.7,37.7,59.7,49.7,48.4,38,42.5],"lanes":[["Ghaziabad → Kalinganagar",221,1889],["China → Kalinganagar",189,919],["Kalinganagar → Europe",178,1144],["Kalinganagar → US & Canada",133,1478],["Kalinganagar → Asia",118,575],["Kalinganagar → LATAM",111,1546]]},"All|Meramandali":{"n":937,"co2":893,"kgteu":953,"l12":0.432,"rail":0.382,"ot":0.854,"fr":9.4,"t":[507,327,32,27],"km":[0.962,0.025,0.013,0],"days":[32.9,28.6,30.8,35.7,36.5,29.8,27.1,29.8,39.3,28.3,29.5,20.7,38.8,32.6,23.6,25.4,34.8,28.6,24.2,33.4,32.5,23.5,24.7,30.2,32.3,30.1,24.5,33.4,27.2,23.9],"lanes":[["China → Meramandali",134,953],["Meramandali → Europe",119,1187],["Meramandali → US & Canada",105,1561],["Europe → Meramandali",89,1396],["Meramandali → Asia",83,587],["Meramandali → Jamshedpur",80,603]]},"Import|All":{"n":1500,"co2":1615,"kgteu":1076,"l12":0.381,"rail":0.405,"ot":0.857,"fr":15,"t":[833,666,65,50],"km":[0.955,0.029,0.015,0],"days":[60,57.9,46.8,58.2,51.8,52.7,61,54.3,64.3,61.8,74.4,55.6,45.8,58.9,41.5,48.8,61,49,47.1,55.5,48.9,58.5,58.8,49.7,54.4,52.8,44.9,55.6,30.5,54.1],"lanes":[["China → Jamshedpur",310,1011],["Europe → Jamshedpur",241,1409],["China → Kalinganagar",189,919],["US → Jamshedpur",161,1875],["SE Asia → Jamshedpur",147,739],["China → Meramandali",134,953]]},"Import|Jamshedpur":{"n":763,"co2":860,"kgteu":1127,"l12":0.379,"rail":0.398,"ot":0.862,"fr":7.9,"t":[432,367,35,26],"km":[0.953,0.031,0.016,0],"days":[31.2,27.4,23.6,23.9,27.8,27.2,37.9,27,34,29.5,44,36.6,23.9,27.2,25.7,26,24.6,24.2,22.1,30.2,29.3,32.8,35.1,31.9,31.7,18.1,23.3,33.6,16,34],"lanes":[["China → Jamshedpur",310,1011],["Europe → Jamshedpur",241,1409],["US → Jamshedpur",161,1875],["SE Asia → Jamshedpur",147,739]]},"Import|Kalinganagar":{"n":421,"co2":424,"kgteu":1006,"l12":0.373,"rail":0.406,"ot":0.848,"fr":4.1,"t":[228,164,17,14],"km":[0.959,0.026,0.014,0],"days":[14.7,16.5,10.8,18.4,14.4,10,13.2,18.1,17.1,23,14.5,12.4,10,17.3,10.9,13.9,18.9,14.4,17.2,13.2,12.3,12.8,16.4,13,10.7,19.9,14.5,7.8,8.2,8.8],"lanes":[["China → Kalinganagar",189,919],["Europe → Kalinganagar",108,1351],["US → Kalinganagar",69,1636],["SE Asia → Kalinganagar",57,617]]},"Import|Meramandali":{"n":316,"co2":331,"kgteu":1048,"l12":0.397,"rail":0.421,"ot":0.858,"fr":3.1,"t":[172,134,14,10],"km":[0.955,0.029,0.016,0],"days":[14,14,12.4,15.9,9.6,15.6,9.8,9.2,13.1,9.2,15.9,6.6,11.9,14.4,4.9,8.9,17.4,10.5,7.8,12.2,7.3,12.9,7.3,4.8,12,14.9,7.1,14.2,6.2,11.3],"lanes":[["China → Meramandali",134,953],["Europe → Meramandali",89,1396],["SE Asia → Meramandali",56,691],["US → Meramandali",52,1719]]},"Export|All":{"n":2500,"co2":2471,"kgteu":989,"l12":0.472,"rail":0.405,"ot":0.852,"fr":30.5,"t":[1677,635,77,83],"km":[0.976,0.015,0.009,0],"days":[80.2,84.9,92.9,71.3,79.1,72.1,100.9,83.2,91.3,85.2,80,77.3,97.6,78.8,90.3,68.6,76.8,65,89.1,69.4,103.2,74.7,86.6,91.7,78.5,73.8,89.9,76.8,84.3,78],"lanes":[["Jamshedpur → Europe",289,1223],["Jamshedpur → Asia",263,677],["Jamshedpur → LATAM",230,1619],["Jamshedpur → US & Canada",196,1621],["Jamshedpur → Middle East",185,742],["Kalinganagar → Europe",178,1144]]},"Export|Jamshedpur":{"n":1267,"co2":1292,"kgteu":1019,"l12":0.45,"rail":0.387,"ot":0.852,"fr":15.5,"t":[832,375,43,42],"km":[0.972,0.017,0.011,0],"days":[40.9,55.1,42.4,33.1,34.4,39.8,54.2,42.1,50.5,48.3,50.4,40.6,44.3,45.6,50.1,36.1,32.7,29.1,47.5,35.1,49.7,43,45.5,33,47.9,40,47.9,43.2,45.5,43.3],"lanes":[["Jamshedpur → Europe",289,1223],["Jamshedpur → Asia",263,677],["Jamshedpur → LATAM",230,1619],["Jamshedpur → US & Canada",196,1621],["Jamshedpur → Middle East",185,742],["Jamshedpur → Africa",130,990]]},"Export|Kalinganagar":{"n":745,"co2":698,"kgteu":938,"l12":0.514,"rail":0.423,"ot":0.856,"fr":8.9,"t":[510,145,18,25],"km":[0.981,0.011,0.007,0],"days":[25,17.9,32.8,20.7,21.3,21,30.3,23.5,19.5,18.5,18.9,24.2,30.5,17,25.8,19.7,29.8,20.9,28.5,16.3,31.8,24.4,27.5,34.3,12.3,20.9,26,16.2,18.8,24],"lanes":[["Kalinganagar → Europe",178,1144],["Kalinganagar → US & Canada",133,1478],["Kalinganagar → Asia",118,575],["Kalinganagar → LATAM",111,1546],["Kalinganagar → Middle East",97,636],["Kalinganagar → Africa",61,878]]},"Export|Meramandali":{"n":488,"co2":481,"kgteu":986,"l12":0.469,"rail":0.426,"ot":0.846,"fr":6,"t":[334,115,16,16],"km":[0.977,0.014,0.01,0],"days":[14.3,11.9,17.7,17.5,23.4,11.3,16.4,17.7,21.3,18.4,10.6,12.5,22.7,16.2,14.4,12.8,14.3,15,13.1,18,21.7,7.3,13.5,24.3,18.3,12.9,16,17.3,20,10.7],"lanes":[["Meramandali → Europe",119,1187],["Meramandali → US & Canada",105,1561],["Meramandali → Asia",83,587],["Meramandali → LATAM",73,1583],["Meramandali → Middle East",65,687],["Meramandali → Africa",38,948]]},"Domestic|All":{"n":1000,"co2":918,"kgteu":918,"l12":0.338,"rail":0.172,"ot":0.837,"fr":4,"t":[0,862,53,3],"km":[0,0.754,0.246,0],"days":[34.7,28.7,23.7,29.7,39.3,23.4,18.4,47.9,34.1,37.6,26.6,22.3,22.4,25,37.3,21.6,23.9,35.7,39.3,43.7,43.5,27,38.5,23.5,23,34.4,21.6,38.5,23.1,29.9],"lanes":[["Ghaziabad → Kalinganagar",221,1889],["Ludhiana → Jamshedpur",201,1717],["Faridabad → Jamshedpur",172,1636],["Kalinganagar → Kolkata",98,499],["Jamshedpur → Kalinganagar",94,453],["Meramandali → Jamshedpur",80,603]]},"Domestic|Jamshedpur":{"n":345,"co2":425,"kgteu":1231,"l12":0.336,"rail":0.264,"ot":0.794,"fr":2,"t":[0,387,36,2],"km":[0,0.674,0.326,0],"days":[16.2,12.8,15.3,11.2,20.3,6.2,8,26.2,14,24.8,12.7,8.1,7.6,12.9,24.7,8.1,14,20.4,19.7,18.4,12.2,13.2,20.3,5.1,6.3,13.2,11.2,12.4,11.1,18.3],"lanes":[["Ludhiana → Jamshedpur",201,1717],["Faridabad → Jamshedpur",172,1636],["Jamshedpur → Kolkata",52,422]]},"Domestic|Kalinganagar":{"n":522,"co2":414,"kgteu":792,"l12":0.338,"rail":0.123,"ot":0.856,"fr":1.7,"t":[0,397,16,1],"km":[0,0.828,0.172,0],"days":[14,13.1,7.7,16.2,15.6,14.3,9.4,18.8,15.3,12.1,11,12.6,10.6,10.1,8.2,9.9,6.8,12.1,16.2,22.1,27.9,10.4,14.4,17.3,14.6,18.9,9.1,24.3,11,9.7],"lanes":[["Ghaziabad → Kalinganagar",221,1889],["Kalinganagar → Kolkata",98,499],["Jamshedpur → Kalinganagar",94,453]]},"Domestic|Meramandali":{"n":133,"co2":80,"kgteu":603,"l12":0.352,"rail":0.128,"ot":0.872,"fr":0.3,"t":[0,78,2,0],"km":[0,0.874,0.126,0],"days":[4.5,2.8,0.7,2.4,3.4,3,1,2.9,4.8,0.7,3,1.6,4.2,2.1,4.4,3.7,3.1,3.1,3.4,3.3,3.5,3.4,3.9,1.1,2.1,2.3,1.4,1.8,0.9,1.9],"lanes":[["Meramandali → Jamshedpur",80,603]]}},"boxes":[{"id":"ACLU5100883","booked":"2027-09-01","flow":"Import","plant":"Jamshedpur","lane":"China → Jamshedpur","from":"Shanghai","port":"Haldia","carrier":"Carrier A","cargo":"Consumables","bu":"Raw materials","inco":"CFR","inland":"Rail","t":23.7,"kg":807,"l12":0.452,"legs":[["Origin: Road to ICD","Road",116,190.2,3,"Forwarder distance, default factor"],["Origin: Rail to port","Rail",457,137.1,3,"Forwarder distance, default factor"],["Origin terminal lifts","Handling",0,20,3,"Estimate"],["Sea: Shanghai → Haldia","Sea",7174,347,1,"Carrier fuel data"],["Terminal lifts: Haldia + Tatanagar ICD","Handling",0,20,3,"Terminal lift count"],["Rail: Haldia → Tatanagar ICD","Rail",250,75,3,"Rake data"],["Truck: last mile","Road",19,17.5,2,"ULIP trip, diesel"]]},{"id":"ACLU1860554","booked":"2027-09-01","flow":"Import","plant":"Kalinganagar","lane":"Europe → Kalinganagar","from":"Hamburg","port":"Paradip","carrier":"Carrier A","cargo":"Spares and equipment","bu":"Engineering","inco":"FOB","inland":"Road","t":16.9,"kg":1139,"l12":0.647,"legs":[["Origin: Road to port","Road",91,149.2,3,"Forwarder distance, default factor"],["Origin terminal lifts","Handling",0,10,3,"Estimate"],["Sea: Hamburg → Paradip","Sea",15945,736.1,1,"Carrier fuel data"],["Transshipment lifts","Handling",0,20,3,"Estimate"],["Terminal lifts: Paradip","Handling",0,10,3,"Terminal lift count"],["Truck: port to plant","Road",130,213.2,3,"Estimate on planned distance"]]},{"id":"GCLU6482737","booked":"2027-09-01","flow":"Import","plant":"Kalinganagar","lane":"SE Asia → Kalinganagar","from":"Singapore","port":"Paradip","carrier":"Carrier G","cargo":"Spares and equipment","bu":"Engineering","inco":"CIF","inland":"Road","t":23.1,"kg":664,"l12":0,"legs":[["Origin: Road to port","Road",147,241.1,3,"Forwarder distance, default factor"],["Origin terminal lifts","Handling",0,10,3,"Estimate"],["Sea: Singapore → Paradip","Sea",3131,189.4,3,"Estimate on AIS distance"],["Terminal lifts: Paradip","Handling",0,10,3,"Terminal lift count"],["Truck: port to plant","Road",130,213.2,3,"Estimate on planned distance"]]},{"id":"ACLU6890504","booked":"2027-09-01","flow":"Export","plant":"Jamshedpur","lane":"Jamshedpur → Europe","from":"Antwerp","port":"Haldia","carrier":"Carrier A","cargo":"CR coils","bu":"Flat products","inco":"CIF","inland":"Rail","t":24.9,"kg":886,"l12":0.907,"legs":[["Truck: first mile","Road",20,32.8,3,"Estimate on planned distance"],["Rail: Tatanagar ICD → Haldia","Rail",251,75.3,2,"Rake data, Rail Green Points"],["Terminal lifts: Tatanagar ICD + Haldia + Haldia","Handling",0,30,3,"Terminal lift count"],["Sea: Haldia → Antwerp","Sea",16020,728,1,"Carrier fuel data"],["Transshipment lifts","Handling",0,20,3,"Estimate"]]},{"id":"CCLU5553073","booked":"2027-09-01","flow":"Export","plant":"Kalinganagar","lane":"Kalinganagar → LATAM","from":"Callao","port":"Kolkata","carrier":"Carrier C","cargo":"Galvanised sheet","bu":"Flat products","inco":"CIF","inland":"Road","t":22,"kg":2196,"l12":0.713,"legs":[["Truck: plant to port","Road",360,590.4,3,"Estimate on planned distance"],["Terminal lifts: Kolkata + Kolkata","Handling",0,20,3,"Terminal lift count"],["Sea: Kolkata → Callao","Sea",18000,1565.7,2,"Carrier factor"],["Transshipment lifts","Handling",0,20,3,"Estimate"]]},{"id":"DOMU9185973","booked":"2027-09-01","flow":"Domestic","plant":"Jamshedpur","lane":"Ludhiana → Jamshedpur","from":"","port":"","carrier":"","cargo":"Finished steel","bu":"Flat products","inco":"Domestic","inland":"Rail","t":20.2,"kg":601,"l12":0.085,"legs":[["Truck: first mile","Road",31,50.8,2,"ULIP trip, diesel"],["Rail: Ludhiana ICD → Jamshedpur ICD","Rail",1603,480.9,3,"Rake data"],["Truck: last mile","Road",30,49.2,3,"Estimate on planned distance"],["Terminal lifts: Ludhiana ICD + Jamshedpur ICD","Handling",0,20,3,"Terminal lift count"]]},{"id":"DOMU6860385","booked":"2027-09-01","flow":"Domestic","plant":"Jamshedpur","lane":"Ludhiana → Jamshedpur","from":"","port":"","carrier":"","cargo":"Spares and equipment","bu":"Engineering","inco":"Domestic","inland":"Road","t":18.7,"kg":2670,"l12":1,"legs":[["Truck: linehaul","Road",1628,2669.9,2,"ULIP trip, diesel"]]},{"id":"GCLU7471858","booked":"2027-09-01","flow":"Export","plant":"Jamshedpur","lane":"Jamshedpur → US & Canada","from":"Vancouver","port":"Kolkata","carrier":"Carrier G","cargo":"Galvanised sheet","bu":"Flat products","inco":"FOB","inland":"Road","t":23.5,"kg":1820,"l12":0.248,"legs":[["Truck: plant to port","Road",275,451,2,"ULIP trip, diesel"],["Terminal lifts: Kolkata + Kolkata","Handling",0,20,3,"Terminal lift count"],["Sea: Kolkata → Vancouver","Sea",18740,1328.7,3,"Estimate on AIS distance"],["Transshipment lifts","Handling",0,20,3,"Estimate"]]}],"feeds":[["Bookings","SAP S/4HANA and COMPASS","Nightly export",5000,1,"2027-09-30T23:59","Healthy"],["Carrier CO₂","Shipping line APIs and EDI","API or EDI",3876,0.58,"2027-09-30T22:10","Partial"],["Ship tracking","AIS data provider","API",343,1,"2027-09-30T23:40","Healthy"],["Truck trips","ULIP: e-way bill, FASTag, Vahan","Government API",1781,0.35,"2027-09-30T21:00","Low coverage"],["Rail moves","Rail operators","API or file",1602,0.89,"2027-09-29T18:20","Partial"],["Terminal lifts","Ports, ICDs and CFS","File upload",4172,1,"2027-09-27T09:30","Stale"],["Forwarder legs","Forwarder portals","EDI or file upload",1053,0.6,"2027-09-28T12:00","Stale"]],"byFeed":[["ULIP",2,615],["Terminal",3,60],["AIS",3,1064],["Defaults",3,1519],["Rail",3,78],["Carrier",2,890],["Rail",2,77],["Forwarder",3,190],["Carrier",1,486],["Terminal",2,24]],"pipeline":[["Collect",17827,"rows received from seven feeds"],["Match",12827,"partner rows joined to a booking"],["Build legs",20071,"legs and stops built"],["Apply factors",17813,"legs priced with the factor library"],["Fill gaps",7587,"legs estimated from plans and defaults"],["Store records",5000,"container carbon records"]],"quality":[["All",1,0.097],["All",2,0.321],["All",3,0.582],["Sea",1,0.194],["Sea",2,0.355],["Sea",3,0.452],["Road",1,0],["Road",2,0.284],["Road",3,0.716],["Rail",1,0],["Rail",2,0.395],["Rail",3,0.605],["Handling",1,0],["Handling",2,0.178],["Handling",3,0.822]],"scope3":[["Category 4",3836,0.767],["Category 1",629,0.126],["Category 9",540,0.108]],"ais":[["DIEU4199","Carrier D",14567,14567],["DIUS3782","Carrier D",17228,17228],["DICH3924","Carrier D",7714,7714],["EICH3868","Carrier E",7000,7844],["AICH4086","Carrier A",7285,7285],["BISE3930","Carrier B",3000,3475],["BIEU3891","Carrier B",14300,16259],["AISE4061","Carrier A",3037,3037],["CIUS3783","Carrier C",17000,17316],["BICH3957","Carrier B",7000,7728],["EICH3721","Carrier E",7000,7270],["BIEU3921","Carrier B",14300,14984],["CICH4146","Carrier C",7000,8041],["CICH3814","Carrier C",7000,7795],["EISE4091","Carrier E",3000,3118],["BIEU4093","Carrier B",14300,16504],["CIEU4038","Carrier C",14300,16392],["AICH3917","Carrier A",7341,7341],["AIEU4118","Carrier A",14650,14650],["AISE3748","Carrier A",3094,3094],["DICH3778","Carrier D",7245,7245],["CIEU3977","Carrier C",14300,16293],["BICH4039","Carrier B",7000,7229],["EIEU4111","Carrier E",14300,15794],["DIUS3927","Carrier D",17378,17378],["DICH3813","Carrier D",7187,7187],["EIEU3854","Carrier E",14300,16539],["BICH3846","Carrier B",7000,7280],["CISE4048","Carrier C",3000,3302],["EIUS3725","Carrier E",17000,17787],["BISE3851","Carrier B",3000,3304],["AIEU3822","Carrier A",14996,14996],["DIEU3870","Carrier D",14936,14936],["EIEU3926","Carrier E",14300,14637],["CIEU4111","Carrier C",14300,16535],["AIEU3780","Carrier A",15945,15945],["AICH3844","Carrier A",8041,8041],["BIUS3869","Carrier B",17000,19229],["EIEU4096","Carrier E",14300,15994],["BIEU3776","Carrier B",14300,14975],["CIUS3927","Carrier C",17000,19476],["EIUS4099","Carrier E",17000,17335],["CICH4028","Carrier C",7000,7842],["CICH3944","Carrier C",7000,7252],["AIEU3963","Carrier A",14871,14871],["EIEU3721","Carrier E",14300,14925],["BICH3742","Carrier B",7000,7110],["DIEU3739","Carrier D",14519,14519],["DICH4094","Carrier D",7101,7101],["DICH4117","Carrier D",7135,7135],["EICH4033","Carrier E",7000,7894],["BISE4086","Carrier B",3000,3366],["DISE4147","Carrier D",3365,3365],["AICH4141","Carrier A",7171,7171],["CIUS4180","Carrier C",17000,19297],["CISE3729","Carrier C",3000,3090],["EICH3928","Carrier E",7000,7785],["EICH4140","Carrier E",7000,7269],["BIUS3714","Carrier B",17000,19093],["AIUS3869","Carrier A",17506,17506],["EIUS3954","Carrier E",17000,18799],["CIEU3763","Carrier C",14300,15816],["CISE3879","Carrier C",3000,3425],["CISE3929","Carrier C",3000,3078],["AISE3812","Carrier A",3399,3399],["DIEU4066","Carrier D",16432,16432],["BIUS4022","Carrier B",17000,17740],["DISE3886","Carrier D",3042,3042],["AICH3723","Carrier A",7174,7174],["EIUS3811","Carrier E",17000,17765],["CIEU3821","Carrier C",14300,15763],["AIUS4068","Carrier A",17811,17811],["BISE3774","Carrier B",3000,3408],["EISE3979","Carrier E",3000,3409],["DIUS4054","Carrier D",17348,17348],["CIUS3818","Carrier C",17000,17581],["BISE4185","Carrier B",3000,3116],["AIEU4036","Carrier A",14460,14460],["CICH3729","Carrier C",7000,7114],["AISE3988","Carrier A",3123,3123],["EISE3821","Carrier E",3000,3139],["DISE3980","Carrier D",3094,3094],["EISE3732","Carrier E",3000,3088],["CISE4151","Carrier C",3000,3382],["DISE3725","Carrier D",3326,3326],["BICH4179","Carrier B",7000,7134],["CIUS4060","Carrier C",17000,19214],["AIUS3783","Carrier A",17802,17802],["BIUS3995","Carrier B",17000,17379],["EIUS4149","Carrier E",17000,18853],["DISE4063","Carrier D",3117,3117],["AISE4113","Carrier A",3087,3087],["DIUS3887","Carrier D",17318,17318],["BIUS4110","Carrier B",17000,17294],["DIEU3992","Carrier D",16576,16576],["AIUS3933","Carrier A",17680,17680],["DEAS4184","Carrier D",5060,5060],["DEAS4064","Carrier D",5241,5241],["CEMI3718","Carrier C",5600,5797],["BEAS3847","Carrier B",5000,5772],["BEUS4046","Carrier B",17000,17533],["AELA4027","Carrier A",18663,18663],["AEAS3873","Carrier A",5729,5729],["CEAS4044","Carrier C",5000,5716],["CEMI3926","Carrier C",5600,6233],["DEAS3773","Carrier D",5196,5196],["DEUS3974","Carrier D",17567,17567],["CEAS3752","Carrier C",5000,5150],["BEMI3769","Carrier B",5600,6484],["AEAS3938","Carrier A",5132,5132],["EEAS3896","Carrier E",5000,5650],["EEEU4015","Carrier E",14300,16352],["EEMI3830","Carrier E",5600,5724],["CEEU3935","Carrier C",14300,16120],["EEAS3942","Carrier E",5000,5051],["BEEU3942","Carrier B",14300,16316],["DEMI3913","Carrier D",6465,6465],["AEEU3910","Carrier A",14577,14577],["AELA3769","Carrier A",18563,18563],["BEMI4060","Carrier B",5600,6318],["AEAS4083","Carrier A",5169,5169],["DEMI4017","Carrier D",5692,5692],["AEAS3798","Carrier A",5097,5097],["EEUS4080","Carrier E",17000,17845],["CEUS4052","Carrier C",17000,17729],["BEMI3883","Carrier B",5600,5673],["BEAS4011","Carrier B",5000,5162],["EEAS3712","Carrier E",5000,5083],["CEAS3828","Carrier C",5000,5769],["AEAS4165","Carrier A",5235,5235],["BEMI3956","Carrier B",5600,6290],["BEAF4042","Carrier B",9000,9224],["DEAF4165","Carrier D",9304,9304],["EEUS3825","Carrier E",17000,17471],["BELA3812","Carrier B",18000,18761],["EEEU3738","Carrier E",14300,15741],["DELA3990","Carrier D",18228,18228],["BEEU4091","Carrier B",14300,14662],["EELA3966","Carrier E",18000,18273],["AEMI4036","Carrier A",5870,5870],["AEEU3865","Carrier A",14815,14815],["AEUS3987","Carrier A",17476,17476],["CEAS3955","Carrier C",5000,5761],["DEUS3719","Carrier D",17401,17401],["AEUS3735","Carrier A",19413,19413],["CEAF3751","Carrier C",9000,10078],["BEUS3872","Carrier B",17000,19066],["BEEU3849","Carrier B",14300,14444],["AELA3819","Carrier A",18219,18219],["DELA4062","Carrier D",18385,18385],["EEUS3750","Carrier E",17000,17730],["AEMI3748","Carrier A",5803,5803],["EEEU3933","Carrier E",14300,16192],["AEUS4060","Carrier A",17711,17711],["DEMI4192","Carrier D",5775,5775],["DEAS3887","Carrier D",5064,5064],["BEUS4182","Carrier B",17000,19091],["DEEU3772","Carrier D",14626,14626],["BEEU3748","Carrier B",14300,14969],["DEAS3916","Carrier D",5661,5661],["DEMI3729","Carrier D",5707,5707],["BELA3940","Carrier B",18000,18692],["BEEU4136","Carrier B",14300,14984],["DEMI3881","Carrier D",6437,6437],["BEAS3974","Carrier B",5000,5670],["CEEU3758","Carrier C",14300,16582],["CEEU3882","Carrier C",14300,15767],["EELA3726","Carrier E",18000,18215],["BEUS3952","Carrier B",17000,17557],["AEEU4072","Carrier A",14569,14569],["CEAF3876","Carrier C",9000,9408],["AEMI3812","Carrier A",5756,5756],["AEAF3921","Carrier A",9110,9110],["EEAS4194","Carrier E",5000,5800],["AEEU3733","Carrier A",16020,16020],["CEAF4023","Carrier C",9000,10187],["AEUS4174","Carrier A",17232,17232],["EELA4064","Carrier E",18000,18674],["DEEU4023","Carrier D",14565,14565],["BELA4023","Carrier B",18000,18226],["EEAF3819","Carrier E",9000,9385],["DEAF3824","Carrier D",9268,9268],["EELA4194","Carrier E",18000,18662],["BEAF3763","Carrier B",9000,9908],["CEUS3977","Carrier C",17000,17830],["CEAF3919","Carrier C",9000,10323],["BEAF3936","Carrier B",9000,9969],["EEMI3744","Carrier E",5600,6410],["BEAS3771","Carrier B",5000,5109],["CELA3863","Carrier C",18000,20774],["DEEU3983","Carrier D",14451,14451],["AEAF4169","Carrier A",9162,9162],["DEAF3994","Carrier D",9432,9432],["BEAS4173","Carrier B",5000,5069],["CEMI3886","Carrier C",5600,5739],["AEAF4013","Carrier A",10393,10393],["CEUS4185","Carrier C",17000,18914],["CEEU4093","Carrier C",14300,16175],["DELA3714","Carrier D",18692,18692],["AEUS3844","Carrier A",17745,17745],["AEAF3856","Carrier A",9128,9128],["EEEU3868","Carrier E",14300,16013],["EEAF4159","Carrier E",9000,10317],["EEMI3936","Carrier E",5600,6333],["CELA3929","Carrier C",18000,20307],["DEUS4042","Carrier D",19587,19587],["EEAS4025","Carrier E",5000,5633],["AELA3955","Carrier A",18640,18640],["DEUS3811","Carrier D",17730,17730],["EEAF3797","Carrier E",9000,9278],["CEUS3788","Carrier C",17000,19608],["EELA3898","Carrier E",18000,18651],["BELA3781","Carrier B",18000,20684],["AEAF3772","Carrier A",9244,9244],["BEUS3756","Carrier B",17000,19657],["EEMI4071","Carrier E",5600,5833],["CEAS4191","Carrier C",5000,5517],["DEEU3883","Carrier D",16496,16496],["DELA3822","Carrier D",20631,20631],["CEEU4181","Carrier C",14300,14836],["CELA3770","Carrier C",18000,20236],["DEAF4066","Carrier D",9147,9147],["AEMI3990","Carrier A",5827,5827],["DEAF3718","Carrier D",9176,9176],["BEAF3852","Carrier B",9000,9261],["EEAF4067","Carrier E",9000,9163],["CEMI4061","Carrier C",5600,6179],["AEEU4139","Carrier A",14683,14683],["CEAF4179","Carrier C",9000,9323],["EEUS3987","Carrier E",17000,19151],["BEMI4196","Carrier B",5600,5774],["DELA4192","Carrier D",18821,18821],["BEAF4147","Carrier B",9000,9222],["CELA4036","Carrier C",18000,20655],["EEAF3924","Carrier E",9000,10072],["CEUS3862","Carrier C",17000,19449],["CEMI4148","Carrier C",5600,6372],["AELA4173","Carrier A",18580,18580],["EEUS4114","Carrier E",17000,18874],["DEUS4170","Carrier D",19387,19387],["EEMI4178","Carrier E",5600,6421],["AEMI4143","Carrier A",5656,5656]],"carriers":[["Carrier A",562,50.1,-0.203,0.92,"Fuel data (API)",0.84,"Yes",95,"Leader","+10% volume"],["Carrier B",564,64.2,0.02,0.91,"Carrier factor (EDI)",0.46,"Pilot",58,"Performer","Hold volume"],["Carrier C",342,82.4,0.31,0.71,"Carrier factor (EDI)",0,"No",18,"Laggard","−10% volume, 12-month plan"],["Carrier D",425,54,-0.142,0.9,"Fuel data (API)",0.81,"Yes",89,"Leader","+10% volume"],["Carrier E",436,71.1,0.131,0.84,"Carrier factor (EDI)",0.16,"Pilot",46,"Laggard","−10% volume, 12-month plan"],["Carrier F",867,null,null,0.86,"None yet",0.22,"Pilot",20,"No data","Data feed before Feb 2028"],["Carrier G",804,null,null,0.8,"None yet",0,"No",0,"No data","Data feed before Nov 2027"]],"alerts":[["High","Carriers","Carrier C runs 31% above its lane average and is on time 71% of the time. Move 10% of its volume at the next review."],["Medium","Data","Carrier F and Carrier G send no CO₂ data for 42% of ocean boxes. Make a data feed a condition of renewal."],["Medium","Feeds","Terminal lifts: latest file is 3.6 days old. Follow up with Ports, ICDs and CFS."],["Medium","Feeds","Forwarder legs: latest file is 2.5 days old. Follow up with Forwarder portals."],["Medium","Feeds","Truck trips cover 35% of containers with a truck leg. The rest use planned distances until transporters share e-way bill data."],["Low","Network","795 sea boxes (20%) used a port that is not the nearest to their plant. Review port choice with the container desks."]],"quotes":[{"lane":"Shanghai → Jamshedpur","option":"A","carrier":"Carrier E","route":"Via Singapore, truck Haldia → plant","freight_inr":102000,"co2_t":1.2,"transit_days":24,"on_time_pct":93},{"lane":"Shanghai → Jamshedpur","option":"B","carrier":"Carrier D","route":"Direct sailing, rail Haldia → Tatanagar","freight_inr":102900,"co2_t":0.86,"transit_days":22,"on_time_pct":91},{"lane":"Shanghai → Jamshedpur","option":"C","carrier":"Carrier C","route":"Via Colombo, truck Haldia → plant","freight_inr":99800,"co2_t":1.27,"transit_days":27,"on_time_pct":71},{"lane":"Jamshedpur → Rotterdam","option":"A","carrier":"Carrier B","route":"Truck to Haldia, via Colombo","freight_inr":152000,"co2_t":1.54,"transit_days":31,"on_time_pct":89},{"lane":"Jamshedpur → Rotterdam","option":"B","carrier":"Carrier A","route":"Rail to Haldia, direct sailing","freight_inr":154800,"co2_t":0.98,"transit_days":29,"on_time_pct":92},{"lane":"Jamshedpur → Rotterdam","option":"C","carrier":"Carrier C","route":"Truck to Haldia, via Colombo","freight_inr":147500,"co2_t":1.87,"transit_days":33,"on_time_pct":72},{"lane":"Ludhiana → Jamshedpur","option":"A","carrier":"Transporter 1","route":"Diesel truck, 1,630 km","freight_inr":86800,"co2_t":2.67,"transit_days":4,"on_time_pct":85},{"lane":"Ludhiana → Jamshedpur","option":"B","carrier":"Rail operator 1","route":"Rail with truck at both ends","freight_inr":71000,"co2_t":0.6,"transit_days":6,"on_time_pct":82},{"lane":"Ludhiana → Jamshedpur","option":"C","carrier":"Transporter 2","route":"LNG truck, 1,630 km","freight_inr":89500,"co2_t":2.27,"transit_days":4,"on_time_pct":86}],"scen":[["credits","Credits only","FY28",57.97,0,0],["credits","Credits only","FY29",57.97,0,0],["credits","Credits only","FY30",55.2,4.8,-5.5],["wave1","Quick wins only","FY28",57.97,0,2],["wave1","Quick wins only","FY29",51.66,10.9,8],["wave1","Quick wins only","FY30",50.09,13.6,19.2],["waves12","Quick wins + mode shift","FY28",57.97,0,2],["waves12","Quick wins + mode shift","FY29",50.43,13,8],["waves12","Quick wins + mode shift","FY30",43.9,24.3,18.8],["full","Full plan (incl. credits)","FY28",57.97,0,2],["full","Full plan (incl. credits)","FY29",50.43,13,8],["full","Full plan (incl. credits)","FY30",41.12,29.1,13.3]],"levers":[[1,"Fuller light boxes (+3%)","Utilisation",1,0.89,-101,9],[2,"Reuse import boxes (25%)","Empty moves",1,1.62,-55.6,9],[3,"Use the nearest port","Port choice",1,1.42,-10,1.42],[4,"Rail North → East (30% → 70%)","Modal shift",2,2.81,-1.8,0.49],[5,"Direct sailings, fewer stops","Route choice",1,0.85,0,0],[6,"Cleaner carriers (best 25%)","Carrier choice",1,2.85,0.3,-0.09],[7,"More efficient ships (CII)","Vessel efficiency",1,1.14,0.8,-0.09],[8,"LNG/EV trucks (25% of km)","Green fuel",2,1.16,1.5,-0.17],[9,"Port–plant rail (40% → 60%)","Modal shift",2,2.9,2.5,-0.73],[10,"Green fuel at sea (credits)","Green fuel",3,2.77,20,-5.55]],"budget":[["Data and integration",6],["Carbon team",4.5],["Pilots",3],["Carbon calculator",2.5],["Change, training, audit",2.5],["Dashboards, booking screen",2],["Contingency",2]]};
+const $ = (s, r = document) => r.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+function h(tag, a, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in a || {}) { if (k === 'class') e.className = a[k]; else if (k === 'style') e.style.cssText = a[k]; else if (k.startsWith('on')) e.addEventListener(k.slice(2), a[k]); else e.setAttribute(k, a[k]); }
+  kids.flat().forEach((c) => { if (c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c))); });
+  return e;
+}
+function sv(tag, a, p) { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function svg(el, W, H) { return sv('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', style: 'display:block;overflow:visible' }, el); }
+function tx(p, x, y, str, o = {}) { const t = sv('text', { x, y, 'text-anchor': o.a || 'start', 'font-size': o.size || 12, fill: o.fill || '#5d6c83', 'font-weight': o.w || 400 }, p); t.textContent = str; return t; }
+const nf = new Intl.NumberFormat('en-IN');
+const F = {
+  int: (v) => nf.format(Math.round(v)),
+  pct: (v) => Math.round(v * 100) + '%',
+  spct: (v) => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 100)) + '%',
+  inr: (v) => '₹' + nf.format(Math.round(v)),
+  cr: (v) => (v < 0 ? '−₹' : '₹') + Math.abs(v).toFixed(1) + ' cr',
+  t1: (v) => v.toFixed(1),
+};
+const tip = $('#tip');
+function hover(el, title, rows) {
+  el.addEventListener('mousemove', (e) => {
+    tip.replaceChildren(h('b', null, title), ...rows.map((r) => h('div', null, r)));
+    tip.style.display = 'block';
+    tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + 'px';
+    tip.style.top = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8) + 'px';
+  });
+  el.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+}
+const MODES = ['Sea', 'Road', 'Rail', 'Handling'];
+const MC = { Sea: 'var(--sea)', Road: 'var(--road)', Rail: 'var(--rail)', Handling: 'var(--hand)' };
+const ICON = { Sea: '🚢', Road: '🚛', Rail: '🚆', Handling: '🏗️' };
+const LC = { 1: 'var(--l1)', 2: 'var(--l2)', 3: 'var(--l3)' };
+const statusPill = (s) => h('span', { class: 'pill ' + (s === 'Healthy' ? 'p-ok' : s === 'Stale' ? 'p-bad' : 'p-warn') }, s);
+const BASE_KG_TEU = 966; // FY28 plan baseline: 57.97 kt over 60,000 TEU
+function seg(el, label, items, isOn, onPick) {
+  el.replaceChildren(h('span', null, label), ...items.map(([v, t]) => h('button', { class: isOn(v) ? 'on' : '', onclick: () => onPick(v) }, t)));
+}
+function kpis(el, list) {
+  el.replaceChildren(...list.map(([l, v, s, cls]) => h('div', { class: 'kpi' }, h('span', { class: 'l' }, l), h('span', { class: 'v' }, v), h('span', { class: 's ' + (cls || '') }, s))));
+}
+function hbars(el, rows, color) {
+  const max = Math.max(...rows.map((r) => r[1]), 1);
+  el.replaceChildren(...rows.map(([n, v, lab, c]) => h('div', { class: 'hb' }, h('span', { class: 'n' }, n), h('span', { class: 't' }, h('b', { style: `width:${Math.max(1, (v / max) * 100)}%;background:${c || color}` })), h('span', { class: 'v' }, lab))));
+}
+
+/* ---------------- Control tower ---------------- */
+const st = { flow: 'All', plant: 'All', price: 6000, lane: 'Shanghai → Jamshedpur', scen: 'full', box: M.boxes[0].id, q: '' };
+const FL = { All: 'All flows', Import: 'Imports', Export: 'Exports', Domestic: 'Domestic' };
+const PL = ['All', 'Jamshedpur', 'Kalinganagar', 'Meramandali'];
+function renderTower() {
+  const railKpi = () => {
+    if (st.flow === 'Domestic') { const r = M.cuts['Domestic|' + st.plant].rail; return ['Domestic moves by rail', F.pct(r), 'FY30 goal 70% North → East', r >= 0.7 ? 'ok' : 'warn']; }
+    const fs = (st.flow === 'All' ? ['Import', 'Export'] : [st.flow]).map((f) => M.cuts[f + '|' + st.plant]);
+    const r = fs.reduce((a, x) => a + x.n * x.rail, 0) / fs.reduce((a, x) => a + x.n, 0);
+    return ['Port ↔ plant moves by rail', F.pct(r), 'FY30 goal 60% (big plants)', r >= 0.6 ? 'ok' : 'warn'];
+  };
+  const c = M.cuts[st.flow + '|' + st.plant], all = M.cuts['All|All'], isAll = st.flow === 'All' && st.plant === 'All';
+  seg($('#f-flow'), 'Flow', Object.entries(FL), (v) => v === st.flow, (v) => { st.flow = v; renderTower(); });
+  seg($('#f-plant'), 'Plant', PL.map((p) => [p, p === 'All' ? 'All plants' : p]), (v) => v === st.plant, (v) => { st.plant = v; renderTower(); });
+  const tot = c.t.reduce((a, b) => a + b, 0), roadShare = c.t[1] / tot;
+  $('#t-insight').replaceChildren(h('b', null, `${FL[st.flow]}, ${st.plant === 'All' ? 'all plants' : st.plant}: `), `${F.int(c.co2)} t CO₂ from ${F.int(c.n)} containers in September. Trucks drive ${F.pct(c.km[1])} of the box-kilometres but cause ${F.pct(roadShare)} of the CO₂ — box reuse, nearest port and cleaner carriers come first; rail only where a lane fills regular trains.`);
+  const dk = isAll ? c.kgteu / BASE_KG_TEU - 1 : c.kgteu / all.kgteu - 1;
+  kpis($('#t-kpis'), [
+    ['CO₂ this month', F.int(c.co2) + ' t', `Run-rate ${F.t1((c.co2 * 12) / 1000)} kt a year`],
+    ['kg CO₂ per TEU', F.int(c.kgteu), isAll ? `${F.spct(dk)} vs FY28 plan baseline (${BASE_KG_TEU})` : `${F.spct(dk)} vs network (${F.int(all.kgteu)})`, dk > 0 ? 'bad' : 'ok'],
+    ['CO₂ on real data', F.pct(c.l12), 'Levels 1–2 · FY28 goal 40%', c.l12 >= 0.4 ? 'ok' : 'warn'],
+    railKpi(),
+    ['Delivered on time', F.pct(c.ot), `${F.int(c.n)} containers`, c.ot >= 0.85 ? 'ok' : 'warn'],
+    ['Shadow carbon cost', F.cr((c.co2 * 6000) / 1e7), `at ₹6,000/t · freight ${F.cr(c.fr)}`],
+  ]);
+  // modes
+  const co2s = c.t.map((v) => v / tot);
+  const stack = (vals) => h('div', { class: 'stack' }, ...MODES.map((m, i) => { const d = h('div', { style: `width:${vals[i] * 100}%;background:${MC[m]}` }, vals[i] > 0.07 ? F.pct(vals[i]) : ''); hover(d, m, [`${F.pct(vals[i])}`]); return d; }));
+  $('#t-modes').replaceChildren(h('div', { class: 'lbl' }, 'Share of box-kilometres'), stack(c.km), h('div', { class: 'lbl' }, 'Share of CO₂'), stack(co2s),
+    h('div', { class: 'legend' }, ...MODES.map((m, i) => h('span', null, h('i', { style: `background:${MC[m]}` }), `${m} · ${F.int(c.t[i])} t`))));
+  // days
+  const el = $('#t-days'); el.replaceChildren(); const W = Math.max(320, el.clientWidth || 600), H = 220, m = { l: 36, r: 6, t: 10, b: 24 };
+  const s = svg(el, W, H), mx = Math.max(...c.days) * 1.1, bw = (W - m.l - m.r) / c.days.length;
+  const y = (v) => H - m.b - (v / mx) * (H - m.t - m.b);
+  [0, 0.25, 0.5, 0.75, 1].forEach((f) => { const v = mx * f; sv('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: '#edf1f6' }, s); tx(s, m.l - 6, y(v) + 4, F.int(v), { a: 'end', size: 11 }); });
+  c.days.forEach((v, i) => { const r = sv('rect', { x: m.l + i * bw + bw * 0.15, y: y(v), width: bw * 0.7, height: Math.max(0, y(0) - y(v)), rx: 3, fill: 'var(--blue)' }, s); hover(r, `${i + 1} Sep 2027`, [`${F.t1(v)} t CO₂`]); if (i % 5 === 0) tx(s, m.l + i * bw + bw / 2, H - 6, `${i + 1} Sep`, { a: 'middle', size: 11 }); });
+  const avg = c.days.reduce((a, b) => a + b, 0) / c.days.length;
+  sv('line', { x1: m.l, x2: W - m.r, y1: y(avg), y2: y(avg), stroke: '#13213a', 'stroke-dasharray': '5 4', 'stroke-width': 1.3 }, s);
+  // lanes
+  hbars($('#t-lanes'), c.lanes.map(([n, t, k]) => [n, t, `${F.int(t)} t · ${F.int(k)} kg/TEU`]), 'var(--navy2)');
+  // heat
+  const heat = h('div', { class: 'heat' }, h('span'), ...['Import', 'Export', 'Domestic', 'All'].map((f) => h('span', { class: 'h' }, FL[f])));
+  const mxh = Math.max(...['Import', 'Export', 'Domestic'].flatMap((f) => PL.slice(1).map((p) => M.cuts[f + '|' + p].co2)));
+  PL.slice(1).concat(['All']).forEach((p) => {
+    heat.append(h('span', { class: 'rh' }, p === 'All' ? 'All plants' : p));
+    ['Import', 'Export', 'Domestic', 'All'].forEach((f) => {
+      const v = M.cuts[f + '|' + p].co2, k = f === 'All' || p === 'All' ? 0 : v / mxh;
+      heat.append(h('button', { class: f === st.flow && p === st.plant ? 'on' : '', style: `background:rgba(29,95,191,${(0.06 + 0.5 * k).toFixed(2)})`, onclick: () => { st.flow = f; st.plant = p; renderTower(); } }, F.int(v)));
+    });
+  });
+  $('#t-heat').replaceChildren(heat);
+  // alerts
+  $('#t-alerts').replaceChildren(...M.alerts.map(([sev, area, msg]) => {
+    const b = h('button', { class: 'btn', onclick: () => { b.textContent = 'Assigned ✓'; b.classList.add('done'); } }, 'Assign owner');
+    return h('div', { class: 'alert' }, h('div', null, h('span', { class: 'pill ' + (sev === 'High' ? 'p-bad' : sev === 'Medium' ? 'p-warn' : 'p-mute') }, sev), h('div', { class: 'area', style: 'margin-top:4px' }, area)), h('div', null, msg), b);
+  }));
+}
+$('#f-reset').onclick = () => { st.flow = 'All'; st.plant = 'All'; renderTower(); };
+
+/* ---------------- Data pipeline ---------------- */
+const SRC = [
+  ['Carrier', 'Carrier CO₂ feed', 'Carrier CO₂'], ['AIS', 'Ship tracking (AIS)', 'Ship tracking'], ['ULIP', 'ULIP truck trips', 'Truck trips'],
+  ['Rail', 'Rail operators', 'Rail moves'], ['Terminal', 'Ports, ICDs, CFS', 'Terminal lifts'], ['Forwarder', 'Forwarder portals', 'Forwarder legs'], ['Defaults', 'SAP & COMPASS plans', 'Bookings'],
+];
+function renderPipeline() {
+  const feedRow = (n) => M.feeds.find((f) => f[0] === n);
+  $('#p-feeds').replaceChildren(...M.feeds.map(([n, sys, meth, rows, cov, last, stt]) => h('div', { class: 'feed' },
+    h('div', { class: 'row' }, h('span', { class: 'nm', style: 'color:var(--fg)' }, n), statusPill(stt)),
+    h('div', { class: 'sys' }, sys + ' · ' + meth),
+    h('div', { class: 'mini' }, h('span', { class: 't' }, h('b', { style: `width:${cov * 100}%;background:${stt === 'Healthy' ? 'var(--ok)' : stt === 'Stale' ? 'var(--bad)' : 'var(--warn)'}` })), h('span', { class: 'lbl' }, F.pct(cov))),
+    h('div', { class: 'row' }, h('span', null, F.int(rows) + ' rows'), h('span', null, 'Last: ' + last.slice(8, 10) + ' Sep ' + last.slice(11, 16))))));
+  // sankey
+  const box = $('#p-flow'); box.replaceChildren();
+  const W = Math.max(940, box.parentElement.clientWidth || 940), H = 430, top = 50, bot = 12, gap = 10, minH = 22;
+  box.style.minWidth = W + 'px';
+  const s = svg(box, W, H);
+  const val = (k, lv) => M.byFeed.filter((r) => r[0] === k && (lv == null || r[1] === lv)).reduce((a, r) => a + r[2], 0);
+  const tot = M.byFeed.reduce((a, r) => a + r[2], 0);
+  const sc = (H - top - bot - gap * (SRC.length - 1) - minH * SRC.length) / tot, totH = tot * sc;
+  const x0 = 236, bx0 = Math.round(W * 0.39), bx1 = bx0 + 150, x2 = Math.round(W * 0.7), yE = top + (H - top - bot - totH) / 2;
+  const rib = (ax, a0, a1, bx, b0, b1) => { const m = (ax + bx) / 2; return `M${ax},${a0}C${m},${a0} ${m},${b0} ${bx},${b0}L${bx},${b1}C${m},${b1} ${m},${a1} ${ax},${a1}Z`; };
+  const head = (x, str, a) => tx(s, x, 18, str, { a, w: 700, fill: '#13213a', size: 12.5 });
+  head(x0 + 8, '1 · Source feeds', 'end'); head((bx0 + bx1) / 2, '2 · TRACE engine', 'middle'); head(x2 + 4, '3 · Carbon records', 'middle'); head(W - 4, '4 · Used in', 'end');
+  let ys = top, ye = yE;
+  SRC.forEach(([k, name, feed]) => {
+    const v = val(k), hh = minH + v * sc, f = feedRow(feed);
+    sv('rect', { x: x0, y: ys, width: 8, height: hh, rx: 2, fill: '#13213a' }, s);
+    tx(s, x0 - 10, ys + hh / 2 - 2, name, { a: 'end', w: 600, fill: '#13213a' });
+    if (f) tx(s, x0 - 10, ys + hh / 2 + 12, `${F.int(f[3])} rows · ${F.pct(f[4])} coverage`, { a: 'end', size: 11 });
+    let yy = ys + (hh - v * sc) / 2;
+    [1, 2, 3].forEach((lv) => {
+      const lvV = val(k, lv); if (!lvV) return; const th = lvV * sc;
+      const p = sv('path', { d: rib(x0 + 8, yy, yy + th, bx0, ye, ye + th), fill: LC[lv], opacity: 0.55 }, s);
+      p.addEventListener('mouseenter', () => p.setAttribute('opacity', 0.85)); p.addEventListener('mouseleave', () => p.setAttribute('opacity', 0.55));
+      hover(p, `${name} · Level ${lv}`, [`${F.int(lvV)} t CO₂`, `${F.pct(lvV / tot)} of all CO₂`]);
+      yy += th; ye += th;
+    });
+    ys += hh + gap;
+  });
+  // engine box
+  const eb0 = yE - 70, eb1 = yE + totH + 70;
+  sv('rect', { x: bx0, y: eb0, width: bx1 - bx0, height: eb1 - eb0, rx: 12, fill: '#0a2753' }, s);
+  tx(s, (bx0 + bx1) / 2, eb0 + 24, 'TRACE engine', { a: 'middle', w: 700, fill: '#fff', size: 13 });
+  ['① Match to bookings', '② Build legs & stops', '③ Apply factor library', '④ Fill gaps (labelled)', '⑤ Tag Scope 3, check'].forEach((t, i) => tx(s, bx0 + 14, eb0 + 50 + i * ((eb1 - eb0 - 64) / 5), t, { fill: '#d7e2f3', size: 11.5 }));
+  // records
+  let yl = yE;
+  [1, 2, 3].forEach((lv) => {
+    const v = val(null, lv) || M.byFeed.filter((r) => r[1] === lv).reduce((a, r) => a + r[2], 0); const th = v * sc;
+    const p = sv('path', { d: rib(bx1, yl, yl + th, x2, yl, yl + th), fill: LC[lv], opacity: 0.8 }, s);
+    hover(p, `Level ${lv} data`, [`${F.int(v)} t CO₂`, `${F.pct(v / tot)} of all CO₂`]);
+    yl += th;
+  });
+  sv('rect', { x: x2, y: yE, width: 8, height: totH, rx: 2, fill: '#13213a' }, s);
+  const rec = M.pipeline.find((r) => r[0] === 'Store records');
+  tx(s, x2 + 4, yE + totH + 22, `${F.int(rec[1])} containers`, { a: 'middle', w: 600, fill: '#13213a' });
+  tx(s, x2 + 4, yE + totH + 37, `${F.int(M.cuts['All|All'].co2)} t CO₂e`, { a: 'middle', size: 11 });
+  const USES = ['Control tower', 'Booking desk', 'Carrier scorecards', 'Customer statements', 'BRSR & annual report'];
+  const step = Math.max(26, totH / (USES.length - 1)), uy0 = yE + totH / 2 - (step * (USES.length - 1)) / 2, xU = W - 150;
+  USES.forEach((u, i) => {
+    const y = uy0 + i * step, m = (x2 + 8 + xU) / 2;
+    sv('path', { d: `M${x2 + 8},${yE + totH / 2}C${m},${yE + totH / 2} ${m},${y} ${xU - 6},${y}`, fill: 'none', stroke: '#9aaac0', 'stroke-width': 1.4 }, s);
+    sv('circle', { cx: xU - 3, cy: y, r: 4, fill: '#1d5fbf' }, s);
+    tx(s, xU + 6, y + 4, u, { fill: '#13213a' });
+  });
+  // steps
+  const SD = { Collect: 'rows from seven feeds', Match: 'partner rows joined to a booking', 'Build legs': 'legs and stops built', 'Apply factors': 'legs priced with factor library', 'Fill gaps': 'legs estimated (Level 3)', 'Store records': 'container carbon records' };
+  $('#p-steps').replaceChildren(...M.pipeline.map(([n, v], i) => h('div', { class: 'step' }, h('div', { class: 'k' }, `Step ${i + 1} · ${n}`), h('div', { class: 'v' }, F.int(v)), h('div', { class: 'd' }, SD[n] || ''))));
+  // quality
+  const q = $('#p-quality'); q.replaceChildren();
+  ['All', 'Sea', 'Road', 'Rail', 'Handling'].forEach((md) => {
+    const sh = [1, 2, 3].map((lv) => (M.quality.find((r) => r[0] === md && r[1] === lv) || [0, 0, 0])[2]);
+    const bar = h('div', { class: 'stack', style: 'position:relative;height:26px;margin:2px 0 10px' }, ...sh.map((v, i) => { const d = h('div', { style: `width:${v * 100}%;background:${LC[i + 1]};color:${i === 2 ? '#13213a' : '#fff'}` }, v > 0.09 ? F.pct(v) : ''); hover(d, `${md === 'All' ? 'All modes' : md} · Level ${i + 1}`, [F.pct(v) + ' of CO₂']); return d; }),
+      h('span', { style: 'position:absolute;left:40%;top:-3px;bottom:-3px;border-left:2px dashed #13213a' }));
+    q.append(h('div', { class: 'lbl', style: md === 'All' ? 'font-weight:700;color:#13213a' : '' }, md === 'All' ? 'All modes' : md), bar);
+  });
+  // ais scatter
+  const a = $('#p-ais'); a.replaceChildren(); const AW = Math.max(320, a.clientWidth || 500), AH = 250, am = { l: 54, r: 10, t: 8, b: 34 };
+  const as = svg(a, AW, AH), amx = Math.max(...M.ais.flatMap((r) => [r[2], r[3]])) * 1.05;
+  const ax = (v) => am.l + (v / amx) * (AW - am.l - am.r), ay = (v) => AH - am.b - (v / amx) * (AH - am.t - am.b);
+  [0, 5000, 10000, 15000, 20000].filter((v) => v <= amx).forEach((v) => { sv('line', { x1: am.l, x2: AW - am.r, y1: ay(v), y2: ay(v), stroke: '#edf1f6' }, as); tx(as, am.l - 6, ay(v) + 4, F.int(v), { a: 'end', size: 11 }); tx(as, ax(v), AH - am.b + 15, F.int(v), { a: 'middle', size: 11 }); });
+  sv('line', { x1: ax(0), y1: ay(0), x2: ax(amx), y2: ay(amx), stroke: '#9aaac0', 'stroke-width': 1.3 }, as);
+  M.ais.forEach(([voy, car, rep, sail]) => { const flag = sail / rep - 1 >= 0.1; const c = sv('circle', { cx: ax(rep), cy: ay(sail), r: 4.5, fill: flag ? 'var(--bad)' : 'var(--blue)', 'fill-opacity': 0.7 }, as); hover(c, `${voy} · ${car}`, [`Carrier: ${F.int(rep)} km`, `Ship tracking: ${F.int(sail)} km`, `Gap: ${F.spct(sail / rep - 1)}`]); });
+  tx(as, (am.l + AW) / 2, AH - 4, 'Carrier-reported km', { a: 'middle', size: 11 });
+  const yl2 = tx(as, 12, (AH - am.b) / 2, 'Ship-tracking km', { a: 'middle', size: 11 }); yl2.setAttribute('transform', `rotate(-90 12 ${(AH - am.b) / 2})`);
+  // scope 3
+  const SN = { 'Category 4': 'Cat 4 · Tata Steel pays', 'Category 1': 'Cat 1 · in supplier price', 'Category 9': 'Cat 9 · buyer pays' };
+  hbars($('#p-scope'), M.scope3.map(([c, t, sh], i) => [SN[c], sh, `${F.pct(sh)} · ${F.int(t)} t`, ['var(--navy2)', 'var(--rail)', 'var(--hand)'][i]]));
+  // health table
+  $('#p-health').replaceChildren(h('thead', null, h('tr', null, ...['Feed', 'Rows', 'Coverage', 'Status'].map((t, i) => h('th', { class: i === 1 ? 'r' : '' }, t)))),
+    h('tbody', null, ...M.feeds.map(([n, , , rows, cov, , stt]) => h('tr', null, h('td', null, n), h('td', { class: 'r' }, F.int(rows)), h('td', null, F.pct(cov)), h('td', null, statusPill(stt))))));
+}
+
+/* ---------------- Container tracker ---------------- */
+function renderTracker() {
+  const q = st.q.toLowerCase();
+  const list = M.boxes.filter((b) => !q || (b.id + ' ' + b.lane + ' ' + b.carrier + ' ' + b.cargo).toLowerCase().includes(q));
+  $('#k-list').replaceChildren(...list.map((b) => h('button', { class: 'li' + (b.id === st.box ? ' on' : ''), onclick: () => { st.box = b.id; renderTracker(); } },
+    h('b', null, b.id), h('small', null, `${b.flow} · ${b.lane}`), h('small', null, `${F.int(b.kg)} kg CO₂e · ${b.carrier || 'Rail / road partner'}`))));
+  const b = M.boxes.find((x) => x.id === st.box) || M.boxes[0];
+  const legs = b.legs, max = Math.max(...legs.map((l) => l[3]));
+  const kgT = b.kg / b.t;
+  const journey = h('div', { class: 'journey' });
+  legs.forEach(([nm, md, km, kg, lv, src], i) => {
+    if (i) journey.append(h('span', { class: 'arrow' }, '→'));
+    const card = h('div', { class: 'leg', style: `border-top:4px solid ${MC[md]}` }, h('span', { class: 'ic' }, ICON[md]), h('span', { class: 'nm' }, nm.replace(/^(Sea|Truck|Rail|Origin): /, '')), h('span', { class: 'lbl' }, km ? F.int(km) + ' km' : 'Handling'), h('span', { class: 'kg' }, F.int(kg) + ' kg'), h('span', null, h('span', { class: 'lv', style: `background:${LC[lv]};${lv === 3 ? 'color:#13213a' : ''}` }, 'L' + lv)));
+    hover(card, nm, [`${md} · ${km ? F.int(km) + ' km' : 'lifts'}`, `${F.t1(kg)} kg CO₂e (${F.pct(kg / b.kg)})`, `Level ${lv}: ${src}`]);
+    journey.append(card);
+  });
+  const share = h('div', { class: 'stack', style: 'height:22px' }, ...legs.map(([nm, md, , kg]) => { const d = h('div', { style: `width:${(kg / b.kg) * 100}%;background:${MC[md]};border-right:2px solid #fff` }, kg / b.kg > 0.1 ? F.pct(kg / b.kg) : ''); hover(d, nm, [`${F.t1(kg)} kg CO₂e`]); return d; }));
+  const tb = h('table', null, h('thead', null, h('tr', null, ...['#', 'Leg or stop', 'Mode', 'km', 'kg CO₂e', 'Level', 'Data source'].map((t, i) => h('th', { class: [0, 3, 4].includes(i) ? 'r' : '' }, t)))),
+    h('tbody', null, ...legs.map(([nm, md, km, kg, lv, src], i) => h('tr', null, h('td', { class: 'r' }, i + 1), h('td', null, nm), h('td', null, ICON[md] + ' ' + md), h('td', { class: 'r' }, km ? F.int(km) : '—'), h('td', { class: 'r' }, h('div', { class: 'mini', style: 'justify-content:flex-end' }, h('span', { class: 't', style: 'max-width:90px' }, h('b', { style: `width:${(kg / max) * 100}%;background:${MC[md]}` })), F.t1(kg))), h('td', null, h('span', { class: 'lv', style: `background:${LC[lv]};${lv === 3 ? 'color:#13213a' : ''}` }, 'L' + lv)), h('td', null, src)))));
+  const copy = h('button', { class: 'btn', onclick: () => { copy.textContent = 'Copied ✓'; copy.classList.add('done'); } }, 'Copy statement');
+  $('#k-rec').replaceChildren(
+    h('div', { class: 'rec-h' }, h('div', null, h('div', { class: 'lbl' }, 'Container carbon record'), h('div', { class: 'rec-id' }, b.id), h('div', { class: 'lbl' }, `${b.lane} · ${b.carrier || 'Rail / road partner'}`)), h('div', { style: 'text-align:right' }, h('div', { class: 'big' }, F.int(b.kg) + ' kg'), h('div', { class: 'lbl' }, 'CO₂e, well-to-wheel (ISO 14083)'))),
+    h('div', { class: 'kv' }, ...[['Flow', b.flow], ['Plant', b.plant], ['Indian port', b.port || '—'], ['Origin / destination', b.from || b.lane.split(' → ')[0]], ['Cargo', b.cargo], ['Business unit', b.bu], ['Incoterm', b.inco || '—'], ['Booked', b.booked.slice(8) + ' Sep 2027'], ['kg CO₂e per tonne', F.t1(kgT)], ['On real data (L1–L2)', F.pct(b.l12)]].map(([k, v]) => h('div', null, k, h('b', null, v)))),
+    h('h3', { style: 'margin:6px 0 8px' }, 'Journey, leg by leg'), journey, h('div', { class: 'lbl', style: 'margin-top:8px' }, 'Share of this box’s CO₂ by leg'), share,
+    h('h3', { style: 'margin:14px 0 8px' }, 'Itemised carbon bill'), h('div', { class: 'tbox' }, tb),
+    h('h3', { style: 'margin:16px 0 8px' }, 'Customer statement'),
+    h('div', { class: 'stmt' }, `Container ${b.id} (${b.lane}, booked ${b.booked.slice(8)} Sep 2027) caused ${F.int(b.kg)} kg CO₂e well-to-wheel, ${F.t1(kgT)} kg per tonne of cargo, calculated to ISO 14083 with the TRACE factor library. ${F.pct(b.l12)} of it rests on carrier or actual data; the rest uses labelled estimates.`),
+    h('div', { style: 'margin-top:10px;display:flex;gap:8px' }, copy, h('button', { class: 'btn' }, 'Download PDF')));
+}
+$('#k-q').addEventListener('input', (e) => { st.q = e.target.value; renderTracker(); });
+
+/* ---------------- Carriers ---------------- */
+const BC = { Leader: 'var(--ok)', Performer: 'var(--blue)', Laggard: 'var(--bad)', 'No data': 'var(--l3)' };
+function renderCarriers() {
+  const cs = M.carriers;
+  const lead = cs.filter((c) => c[9] === 'Leader').map((c) => c[0]), worst = cs.filter((c) => c[3] != null).sort((a, b) => b[3] - a[3])[0], blind = cs.filter((c) => c[9] === 'No data');
+  $('#c-insight').replaceChildren(h('b', null, 'This quarter: '), `${lead.join(' and ')} lead on CO₂ and reliability. ${worst[0]} runs ${Math.round(worst[3] * 100)}% above its lane average and is on time only ${F.pct(worst[4])} of the time. ${blind.map((c) => c[0]).join(' and ')} share no CO₂ data yet — that becomes a renewal condition.`);
+  const el = $('#c-bubbles'); el.replaceChildren(); const W = Math.max(520, el.clientWidth || 800), H = 320, m = { l: 150, r: 20, t: 14, b: 44 };
+  const s = svg(el, W, H), x = (v) => m.l + ((v + 0.35) / 0.75) * (W - m.l - m.r), y = (v) => H - m.b - ((v - 0.6) / 0.4) * (H - m.t - m.b);
+  sv('rect', { x: 50, y: m.t, width: 84, height: H - m.t - m.b, rx: 8, fill: '#f1f4f8' }, s); tx(s, 92, H - m.b + 16, 'No CO₂ data', { a: 'middle', size: 11 });
+  [-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3].forEach((v) => { sv('line', { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, stroke: v === 0 ? '#9aaac0' : '#edf1f6' }, s); tx(s, x(v), H - m.b + 16, v === 0 ? 'Lane avg' : F.spct(v), { a: 'middle', size: 11 }); });
+  [0.6, 0.7, 0.8, 0.9, 1].forEach((v) => { sv('line', { x1: 50, x2: W - m.r, y1: y(v), y2: y(v), stroke: '#edf1f6' }, s); tx(s, 44, y(v) + 4, F.pct(v), { a: 'end', size: 11 }); });
+  sv('line', { x1: 50, x2: W - m.r, y1: y(0.8), y2: y(0.8), stroke: 'var(--bad)', 'stroke-dasharray': '6 4' }, s);
+  tx(s, (m.l + W) / 2, H - 6, 'CO₂ per TEU-km vs lane average', { a: 'middle', size: 11 });
+  let ni = 0; const rmax = Math.max(...cs.map((c) => c[1]));
+  cs.slice().sort((a, b) => b[1] - a[1]).forEach((c) => {
+    const cx = c[3] == null ? 72 + (ni++ % 2) * 40 : x(c[3]), cy = y(Math.max(0.6, Math.min(1, c[4]))), r = 8 + 20 * Math.sqrt(c[1] / rmax);
+    const g = sv('g', {}, s);
+    sv('circle', { cx, cy, r, fill: BC[c[9]], 'fill-opacity': 0.75, stroke: '#fff', 'stroke-width': 2 }, g);
+    tx(g, cx, cy + 4, c[0].replace('Carrier ', ''), { a: 'middle', w: 700, fill: '#13213a', size: 12 });
+    hover(g, `${c[0]} · ${c[9]}`, [`vs lane: ${c[3] == null ? 'no data' : F.spct(c[3])}`, `On time: ${F.pct(c[4])}`, `Containers: ${F.int(c[1])}`, `Score: ${c[8]}/100`]);
+  });
+  $('#c-table').replaceChildren(h('thead', null, h('tr', null, ...['Carrier', 'TEU', 'g CO₂/TEU-km', 'vs lane', 'On time', 'Data feed', 'A/B ships', 'Green fuel', 'Score', 'Band', 'Next step'].map((t, i) => h('th', { class: [1, 2, 3, 4, 6].includes(i) ? 'r' : '' }, t)))),
+    h('tbody', null, ...cs.slice().sort((a, b) => b[8] - a[8]).map((c) => h('tr', null, h('td', null, h('b', null, c[0])), h('td', { class: 'r' }, F.int(c[1])), h('td', { class: 'r' }, c[2] == null ? '—' : F.t1(c[2])), h('td', { class: 'r', style: `color:${c[3] == null ? 'inherit' : c[3] > 0.1 ? 'var(--bad)' : c[3] < 0 ? 'var(--ok)' : 'inherit'}` }, c[3] == null ? '—' : F.spct(c[3])), h('td', { class: 'r' }, F.pct(c[4])), h('td', null, c[5]), h('td', { class: 'r' }, F.pct(c[6])), h('td', null, c[7]),
+      h('td', null, h('div', { class: 'mini' }, h('span', { class: 't', style: 'min-width:60px' }, h('b', { style: `width:${c[8]}%;background:${BC[c[9]]}` })), h('b', null, c[8]))),
+      h('td', null, h('span', { class: 'pill ' + (c[9] === 'Leader' ? 'p-ok' : c[9] === 'Performer' ? 'p-blue' : c[9] === 'Laggard' ? 'p-bad' : 'p-mute') }, c[9])), h('td', null, c[10])))));
+}
+
+/* ---------------- Booking desk ---------------- */
+function quotesFor(lane, price) {
+  const qs = M.quotes.filter((q) => q.lane === lane).map((q) => ({ ...q, ok: q.on_time_pct >= 80, carbon: q.co2_t * price, total: q.freight_inr + q.co2_t * price }));
+  const best = qs.filter((q) => q.ok).sort((a, b) => a.total - b.total)[0], cheap = qs.filter((q) => q.ok).sort((a, b) => a.freight_inr - b.freight_inr)[0];
+  return { qs, best, cheap };
+}
+function renderBooking() {
+  const lanes = [...new Set(M.quotes.map((q) => q.lane))];
+  seg($('#b-lane'), 'Lane', lanes.map((l) => [l, l]), (v) => v === st.lane, (v) => { st.lane = v; renderBooking(); });
+  $('#b-price').value = st.price; $('#b-pv').textContent = F.inr(st.price) + ' / t';
+  const { qs, best, cheap } = quotesFor(st.lane, st.price);
+  const ins = $('#b-insight');
+  if (best.option === cheap.option) ins.replaceChildren(h('b', null, `Book option ${best.option} (${best.carrier}). `), `At ${F.inr(st.price)} per tonne it is the cheapest reliable quote and ${best.co2_t <= Math.min(...qs.filter((q) => q.ok).map((q) => q.co2_t)) ? 'also the cleanest.' : 'carbon does not change the choice yet.'}`);
+  else ins.replaceChildren(h('b', null, `Book option ${best.option} (${best.carrier}). `), `${F.pct(1 - best.co2_t / cheap.co2_t)} less CO₂ for ${((best.freight_inr / cheap.freight_inr - 1) * 100).toFixed(1)}% more freight than the cheapest reliable quote (option ${cheap.option}).`);
+  $('#b-opts').replaceChildren(...qs.map((q) => {
+    const win = q.option === best.option;
+    return h('div', { class: 'opt' + (win ? ' win' : '') + (q.ok ? '' : ' out') },
+      h('div', { class: 'hd' }, h('b', null, 'Option ' + q.option), h('span', { class: 'pill ' + (win ? 'p-ok' : q.ok ? 'p-mute' : 'p-bad') }, win ? 'Recommended' : q.ok ? 'Not best value' : 'Below 80% on time')),
+      h('div', { class: 'lbl' }, q.carrier + ' · ' + q.route),
+      h('dl', null, h('dt', null, 'Transit'), h('dd', null, q.transit_days + ' days'), h('dt', null, 'On time'), h('dd', null, q.on_time_pct + '%'), h('dt', null, 'CO₂ per box'), h('dd', null, q.co2_t.toFixed(2) + ' t'), h('dt', null, 'Freight'), h('dd', null, F.inr(q.freight_inr)), h('dt', null, 'Carbon charge'), h('dd', null, F.inr(q.carbon))),
+      h('div', { class: 'lbl' }, 'Freight + carbon'), h('div', { class: 'tot' }, F.inr(q.total)));
+  }));
+  // bars
+  const el = $('#b-bars'); el.replaceChildren(); const W = Math.max(320, el.clientWidth || 500), bh = 30, gp = 16, m = { l: 74, r: 96, t: 4, b: 26 }, H = m.t + qs.length * (bh + gp) - gp + m.b;
+  const s = svg(el, W, H), lo = Math.floor((Math.min(...qs.map((q) => q.freight_inr)) * 0.93) / 5000) * 5000, hi = Math.ceil(Math.max(...qs.map((q) => q.total)) / 5000) * 5000;
+  const x = (v) => m.l + ((v - lo) / (hi - lo)) * (W - m.l - m.r);
+  [lo, (lo + hi) / 2, hi].forEach((v) => { sv('line', { x1: x(v), x2: x(v), y1: 0, y2: H - m.b, stroke: '#edf1f6' }, s); tx(s, x(v), H - 6, F.inr(v), { a: 'middle', size: 11 }); });
+  qs.forEach((q, i) => {
+    const y = m.t + i * (bh + gp), g = sv('g', {}, s);
+    tx(g, 0, y + bh / 2 + 4, 'Option ' + q.option, { w: q.option === best.option ? 700 : 400, fill: '#13213a' });
+    sv('rect', { x: x(lo), y, width: Math.max(1, x(q.freight_inr) - x(lo)), height: bh, rx: 4, fill: q.ok ? 'var(--navy2)' : '#c6cfdb' }, g);
+    sv('rect', { x: x(q.freight_inr), y, width: Math.max(0, x(q.total) - x(q.freight_inr)), height: bh, rx: 4, fill: q.ok ? 'var(--road)' : '#dfe5ec' }, g);
+    tx(g, x(q.total) + 6, y + bh / 2 + 4, F.inr(q.total), { w: q.option === best.option ? 700 : 400, fill: '#13213a' });
+    hover(g, 'Option ' + q.option, [`Freight ${F.inr(q.freight_inr)}`, `Carbon ${F.inr(q.carbon)}`, `Total ${F.inr(q.total)}`]);
+  });
+  // wins
+  const prices = [0, 1500, 3000, 6000, 9000];
+  const strip = h('div', { style: 'display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center' }, ...prices.map((p) => { const w = quotesFor(st.lane, p).best; return h('div', { style: `border:1px solid var(--line);border-radius:10px;padding:12px 4px;${p === st.price ? 'outline:2px solid var(--navy)' : ''}` }, h('div', { style: 'font-size:22px;font-weight:800;color:var(--ok)' }, w.option), h('div', { class: 'lbl' }, F.inr(p) + '/t')); }));
+  const cleanest = qs.filter((q) => q.ok).sort((a, b) => a.co2_t - b.co2_t)[0];
+  const be = cleanest.option === cheap.option ? 0 : (cleanest.freight_inr - cheap.freight_inr) / (cheap.co2_t - cleanest.co2_t);
+  $('#b-wins').replaceChildren(strip, h('p', { class: 'lbl', style: 'margin:12px 0 0;font-size:13px' }, be > 0 ? `Break-even: option ${cleanest.option} wins once carbon is priced above ${F.inr(be)} per tonne.` : `Option ${cleanest.option} is both the cleanest and the cheapest reliable option, so it wins at any carbon price.`));
+}
+$('#b-price').addEventListener('input', (e) => { st.price = Number(e.target.value); renderBooking(); });
+
+/* ---------------- Executive ---------------- */
+function renderExec() {
+  const sc = [...new Map(M.scen.map((r) => [r[0], r[1]]))];
+  seg($('#e-scen'), 'Scenario', sc, (v) => v === st.scen, (v) => { st.scen = v; renderExec(); });
+  const g = (k, y) => M.scen.find((r) => r[0] === k && r[2] === y);
+  const f30 = g(st.scen, 'FY30'), base = g('full', 'FY28'), all = M.cuts['All|All'], rr = (all.co2 * 12) / 1000;
+  kpis($('#e-kpis'), [
+    ['FY28 baseline', F.t1(base[3]) + ' kt', 'CO₂ a year · plan estimate'],
+    st.scen === 'full'
+      ? ['FY30 after cuts', F.t1(g('waves12', 'FY30')[3]) + ' kt', `−${Math.round(g('waves12', 'FY30')[4])}% vs FY28 · credits a further ${Math.round(f30[4] - g('waves12', 'FY30')[4])}%, reported apart`, 'ok']
+      : ['FY30 under this scenario', F.t1(f30[3]) + ' kt', `−${Math.round(f30[4])}% vs FY28`, 'ok'],
+    ['Net saving from FY30', F.cr(f30[5]), 'a year, after costlier levers', f30[5] >= 0 ? 'ok' : 'bad'],
+    ['Investment FY28–FY30', F.cr(M.budget.reduce((a, b) => a + b[1], 0)), 'released at 4 checkpoints'],
+    ['Measured run-rate', F.t1(rr) + ' kt', `${F.spct(rr / base[3] - 1)} vs plan · sample month`, 'warn'],
+  ]);
+  // path
+  const el = $('#e-path'); el.replaceChildren(); const W = Math.max(320, el.clientWidth || 500), H = 260, m = { l: 40, r: 130, t: 12, b: 26 };
+  const s = svg(el, W, H), yrs = ['FY28', 'FY29', 'FY30'], x = (i) => m.l + 14 + (i / 2) * (W - m.l - m.r - 28), lo = 35, hi = 60, y = (v) => H - m.b - ((v - lo) / (hi - lo)) * (H - m.t - m.b);
+  [35, 40, 45, 50, 55, 60].forEach((v) => { sv('line', { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: '#edf1f6' }, s); tx(s, m.l - 6, y(v) + 4, v, { a: 'end', size: 11 }); });
+  yrs.forEach((yr, i) => tx(s, x(i), H - 6, yr, { a: 'middle', size: 11 }));
+  const ends = [];
+  sc.map((d) => d[0]).filter((k) => k !== st.scen).concat([st.scen]).forEach((k) => {
+    const on = k === st.scen, pts = yrs.map((yr) => g(k, yr)), col = on ? 'var(--blue)' : '#b9c3d0';
+    sv('path', { d: pts.map((p, i) => (i ? 'L' : 'M') + x(i) + ',' + y(p[3])).join(''), fill: 'none', stroke: col, 'stroke-width': on ? 3 : 1.6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, s);
+    pts.forEach((p, i) => { const c = sv('circle', { cx: x(i), cy: y(p[3]), r: on ? 5 : 3.5, fill: col }, s); hover(c, `${p[1]} · ${p[2]}`, [`${F.t1(p[3])} kt CO₂`, `−${Math.round(p[4])}% vs FY28`, `Net ${F.cr(p[5])}`]); });
+    ends.push({ y: y(pts[2][3]), t: `${pts[2][1].replace('Quick wins + mode shift', 'Waves 1–2').replace('Full plan (incl. credits)', 'With credits')} ${F.t1(pts[2][3])}`, on });
+  });
+  ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
+  ends.forEach((e) => tx(s, W - m.r + 10, e.y + 4, e.t, { w: e.on ? 700 : 400, fill: e.on ? '#13213a' : '#5d6c83', size: 11.5 }));
+  // budget donut
+  const bd = $('#e-budget'), R = 88, D = 2 * R + 8, cols = ['#0a2753', '#1d5fbf', '#13a19d', '#8a6ccf', '#ec7a2c', '#e0b33c', '#9aaac0'], tot = M.budget.reduce((a, b) => a + b[1], 0);
+  const holder = h('div', { style: `width:${D}px;flex:none` }), bs = svg(holder, D, D), cx = D / 2, cy = D / 2;
+  let a0 = -Math.PI / 2;
+  M.budget.forEach(([n, v], i) => {
+    const a1 = a0 + (v / tot) * Math.PI * 2, ri = R * 0.6, big = a1 - a0 > Math.PI ? 1 : 0, p = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    const [x1, y1] = p(R, a0), [x2, y2] = p(R, a1), [x3, y3] = p(ri, a1), [x4, y4] = p(ri, a0);
+    hover(sv('path', { d: `M${x1},${y1}A${R},${R} 0 ${big} 1 ${x2},${y2}L${x3},${y3}A${ri},${ri} 0 ${big} 0 ${x4},${y4}Z`, fill: cols[i], stroke: '#fff', 'stroke-width': 2 }, bs), n, [F.cr(v), F.pct(v / tot)]);
+    a0 = a1;
+  });
+  tx(bs, cx, cy - 2, F.cr(tot), { a: 'middle', w: 700, fill: '#13213a', size: 16 }); tx(bs, cx, cy + 16, 'FY28–FY30', { a: 'middle', size: 11 });
+  const lgd = h('div', { style: 'display:grid;gap:8px;flex:1;min-width:180px;font-size:12.5px' }, ...M.budget.map(([n, v], i) => h('div', { style: 'display:flex;gap:8px;align-items:center' }, h('i', { style: `width:11px;height:11px;border-radius:3px;background:${cols[i]};flex:none` }), h('span', { style: 'flex:1' }, n), h('b', null, F.cr(v)))));
+  bd.replaceChildren(h('div', { style: 'display:flex;flex-wrap:wrap;gap:20px;align-items:center' }, holder, lgd));
+  // MACC
+  const mc = $('#e-macc'); mc.replaceChildren(); const MW = Math.max(600, mc.clientWidth || 900), MH = 300, mm = { l: 46, r: 10, t: 22, b: 30 }, lo2 = -45, hi2 = 24;
+  const ms = svg(mc, MW, MH), totKt = M.levers.reduce((a, l) => a + l[4], 0), mx = (v) => mm.l + (v / totKt) * (MW - mm.l - mm.r), my = (v) => MH - mm.b - ((v - lo2) / (hi2 - lo2)) * (MH - mm.t - mm.b);
+  [-40, -20, 0, 20].forEach((v) => { sv('line', { x1: mm.l, x2: MW - mm.r, y1: my(v), y2: my(v), stroke: v === 0 ? '#9aaac0' : '#edf1f6', 'stroke-width': v === 0 ? 1.5 : 1 }, ms); tx(ms, mm.l - 6, my(v) + 4, v > 0 ? '+' + v : v < 0 ? '−' + -v : '0', { a: 'end', size: 11 }); });
+  let acc = 0; const WC = { 1: 'var(--ok)', 2: 'var(--blue)', 3: 'var(--warn)' };
+  M.levers.forEach(([rk, nm, cl, wave, kt, cost, inr]) => {
+    const v = Math.max(lo2, Math.min(hi2, cost)), xa = mx(acc), xb = mx(acc + kt); acc += kt;
+    const y0 = my(0), yv = my(v), top = Math.min(y0, yv), hh = Math.max(3, Math.abs(yv - y0)), clipped = cost < lo2;
+    const r = sv('rect', { x: xa + 1.5, y: top, width: Math.max(1, xb - xa - 3), height: hh, rx: 4, fill: WC[wave] }, ms);
+    hover(r, `${rk}. ${nm}`, [`Case lever: ${cl}`, `Saves ${F.t1(kt)} kt CO₂ a year`, `${cost > 0 ? '+' : cost < 0 ? '−' : ''}${Math.abs(cost).toFixed(1)} ₹'000 per tonne`, `Wave ${wave}`]);
+    tx(ms, (xa + xb) / 2, clipped ? MH - mm.b - 10 : cost >= 0 ? top - 6 : top + hh + 14, clipped ? `${rk} (${Math.round(cost)})` : String(rk), { a: 'middle', w: 700, fill: clipped ? '#fff' : '#13213a', size: 11.5 });
+  });
+  tx(ms, (mm.l + MW) / 2, MH - 6, 'kt CO₂ saved a year (cumulative) →', { a: 'middle', size: 11 });
+  const lg = h('div', { class: 'legend', style: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 16px' }, ...M.levers.map(([rk, nm, , wave, kt, cost]) => h('span', null, h('b', { style: `color:${WC[wave]}` }, rk + '. '), `${nm} · ${F.t1(kt)} kt · ${cost > 0 ? '+' : cost < 0 ? '−' : ''}${Math.abs(cost).toFixed(1)}k ₹/t`)));
+  mc.append(lg);
+  // roadmap
+  const GATES = [
+    ['G0', 'Jun 2027', 'SteerCo', '₹8.5 cr', ['Method signed off; owners named', 'Top 15 partners agree to share data', 'Carbon calculator chosen']],
+    ['G1', 'Mar 2028', 'VP Supply Chain + CFO rep', '₹7.0 cr', ['Every container has a carbon record', 'FY28 baseline ready', 'Dashboards live']],
+    ['G2', 'Mar 2029', 'SteerCo', '₹5.0 cr', ['Carbon in every tender; scorecards live', '12% less CO₂ per TEU', 'Baseline audited']],
+    ['G3', 'Mar 2030', 'ExCo', 'Savings phase', ['24% less CO₂ per TEU (≥15% with no rail)', '85% of CO₂ on real data', 'Green delivery offer live']],
+  ];
+  $('#e-road').replaceChildren(h('div', { class: 'gate', style: 'border-top-color:var(--warn)' }, h('div', { class: 'g' }, 'Day 0'), h('div', { class: 'w' }, 'First 90 days · ₹2.0 cr'), h('ul', null, h('li', null, 'Appoint Carbon team lead'), h('li', null, 'Release Day-0 funding'), h('li', null, 'Carbon clauses in FY28 renewals'))),
+    ...GATES.map(([g, d, who, money, items], i) => h('div', { class: 'gate', style: `border-top-color:${['var(--blue)', 'var(--rail)', 'var(--hand)', 'var(--ok)'][i]}` }, h('div', { class: 'g' }, `${g} · ${d}`), h('div', { class: 'w' }, `${who} · then ${money}`), h('ul', null, ...items.map((t) => h('li', null, t))))));
+}
+
+/* ---------------- Routing ---------------- */
+const SCREENS = {
+  tower: ['Control tower', 'Network carbon, data quality and alerts for container imports, exports and domestic moves', renderTower],
+  pipeline: ['Data sources & pipeline', 'How seven feeds become one carbon record per container', renderPipeline],
+  tracker: ['Container tracker', 'Leg-by-leg carbon record for any container, ready for customers', renderTracker],
+  carriers: ['Carrier scorecard', 'Benchmark shipping lines on CO₂, data and reliability', renderCarriers],
+  booking: ['Booking desk', 'Compare quotes on freight plus an internal carbon price', renderBooking],
+  exec: ['Executive & roadmap', 'FY28–FY30 targets, levers, investment and gates', renderExec],
+};
+let cur = SCREENS[location.hash.slice(1)] ? location.hash.slice(1) : 'tower';
+function show(id) {
+  cur = id;
+  Object.keys(SCREENS).forEach((k) => { $('#' + k).hidden = k !== id; });
+  document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.s === id));
+  $('#pt').textContent = SCREENS[id][0]; $('#ps').textContent = SCREENS[id][1];
+  $('#role').value = id;
+  history.replaceState(null, '', '#' + id);
+  SCREENS[id][2]();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('#nav button').forEach((b) => b.addEventListener('click', () => show(b.dataset.s)));
+$('#role').addEventListener('change', (e) => show(e.target.value));
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => SCREENS[cur][2](), 150); });
+show(cur);
+const intro = $('#intro');
+function enter() { intro.classList.add('gone'); show('tower'); }
+$('#go').addEventListener('click', enter);
+$('#back').addEventListener('click', () => intro.classList.remove('gone'));
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !intro.classList.contains('gone')) { e.preventDefault(); enter(); } });
+$('#go').focus();
+</script>
+</body>
+</html>
